@@ -1,0 +1,28 @@
+
+
+{% extends "index.html" %}
+
+{% block content %}
+
+
+
+ <div class="table-responsive">
+    <table class="table">
+        <tbody>
+        {% for person in persons %}
+            <tr >
+                <td> {{person.name + " " + person.surname}} </td>
+                <td> {{"Номер карты: " + person.card}} </td>
+                <td>
+                    <button type="button" class="btn btn-warning" name="btn_edit_person" data-person_id="{{person.id}}">Edit</button>
+                    <button type="button" class="btn btn-danger" name="btn_delete_person" data-person_id="{{person.id}}">Delete</button>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+ </div>
+
+    <script src="{{ url_for('static', filename='js/person.js') }}"></script>
+
+{% endblock %}

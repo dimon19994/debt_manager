@@ -1,0 +1,96 @@
+
+
+{% extends "index.html" %}
+
+{% block content %}
+
+    <!--https://www.codeply.com/go/nhbdi2FkJm-->
+
+
+    <div class="col-md-6 mx-auto">
+
+        <!-- form card login -->
+        <div class="card rounded-0">
+
+            <div class="card-header">
+                <h3 class="mb-0">{{ form_name }}</h3>
+            </div>
+            <div class="card-body">
+
+                <form class="form" action="/{{ action }}" method=post enctype="multipart/form-data">
+                    {{ form.hidden_tag() }}
+
+                    <div class="form-group">
+                        {{ form.event_name.label }}
+                        {{ form.event_name(class_="form-control") }}
+
+                        {% if form.event_name.errors %}
+                            <div class="alert alert-danger" role="alert">
+                                {% for message in form.event_name.errors %}
+                                    <div>{{ message }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        {{ form.event_place.label }}
+                        {{ form.event_place(class_="form-control") }}
+
+                        {% if form.event_place.errors %}
+                            <div class="alert alert-danger" role="alert">
+                                {% for message in form.event_place.errors %}
+                                    <div>{{ message }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        {{ form.event_date.label }}
+                        {{ form.event_date(class_="form-control") }}
+
+                        {% if form.event_date.errors %}
+                            <div class="alert alert-danger" role="alert">
+                                {% for message in form.event_date.errors %}
+                                    <div>{{ message }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <select id="example-getting-started" multiple="multiple">
+                        {% for friend in friends %}
+                            <option value="cheese">Cheese</option>
+                            <option value="tomatoes">Tomatoes</option>
+                            <option value="mozarella">Mozzarella</option>
+                            <option value="mushrooms">Mushrooms</option>
+                            <option value="pepperoni">Pepperoni</option>
+                            <option value="onions">Onions</option>
+                        {% endfor %}
+                    </select>
+
+
+                    <br>
+
+                    {{ form.submit(class_="btn btn-success") }}
+
+                </form>
+            </div>
+            <!--/card-block-->
+        </div>
+        <!-- /form card login -->
+
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            $('#example-getting-started').multiselect();
+        });
+    </script>
+
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap-multiselect.css') }}">
+    <script src="{{ url_for('static', filename='js/bootstrap-multiselect.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap_new.min.js') }}"></script>
+
+{% endblock %}

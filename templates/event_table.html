@@ -1,0 +1,54 @@
+
+
+{% extends "index.html" %}
+
+{% block content %}
+
+
+
+ <div class="table-responsive">
+    <table class="table">
+         <thead>
+            <tr>
+                <th scope="col"></th>
+                <th scope="col">Закинул</th>
+                <th scope="col">Должен</th>
+                {% for category in categories %}
+                    <th scope="col">{{ category[0] }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+        {% set counter = {"num": 0} %}
+
+        {% for i in range(people|length) %}
+            <tr >
+                <td> {{people[i].name}} </td>
+                <td>{{pay[i][0]}}</td>
+                {% if (all_debts[i][0] - pay[i][0])|round(2) < 0 %}
+                    <td style="background-color: #9bce91">
+                        {{(all_debts[i][0] - pay[i][0])|round(2)}}
+                    </td>
+                {% else %}
+                    <td style="background-color: #e8a09e">
+                        {{(all_debts[i][0] - pay[i][0])|round(2)}}
+                    </td>
+                {% endif %}
+                {% for j in range(categories|length) %}
+                    {% if counter["num"] < debt|length and debt[counter["num"]].person_id == people[i].id and debt[counter["num"]].category == categories[j].category %}
+                        <td>{{ debt[counter["num"]][0] }}</td>
+                        {% set _ = counter.update({'num':counter["num"] + 1}) %}
+                    {% else %}
+                        <td>0</td>
+                    {% endif %}
+                {% endfor %}
+
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+ </div>
+
+    <script src="{{ url_for('static', filename='js/event.js') }}"></script>
+
+{% endblock %}
