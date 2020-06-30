@@ -4,10 +4,10 @@
 
 
 from flask import Flask, render_template, redirect, url_for, request
-from flask_sqlalchemy import SQLAlchemy
+
 from sqlalchemy import or_, and_
-from flask_security import RoleMixin, SQLAlchemyUserDatastore, Security, UserMixin, login_required, current_user
-from flask_security.decorators import roles_accepted, roles_accepted
+from flask_security import SQLAlchemyUserDatastore, Security, login_required, current_user
+from flask_security.decorators import roles_accepted
 from flask_security.utils import hash_password
 from sqlalchemy.sql import func
 
@@ -24,7 +24,6 @@ app.config['SECURITY_PASSWORD_SALT'] = 'salt'
 app.config['SECURITY_PASSWORD_HASH'] = 'sha256_crypt'
 app.config['USER_EMAIL_SENDER_EMAIL'] = "noreply@example.com"
 
-# db = SQLAlchemy(app)
 from dao.model import *
 
 user_datastore = SQLAlchemyUserDatastore(db, OrmUser, OrmRole)
@@ -32,6 +31,7 @@ security = Security(app, user_datastore)
 
 
 @app.route('/', methods=['GET', 'POST'])
+@roles_accepted("User")
 def root():
     return render_template('index.html')
 
@@ -248,7 +248,7 @@ def detail_event():
 
     if len(categories) > 0:
         return render_template('event_table.html', people=participant_id, pay=pay_info, debt=categorical_debt,
-                           categories=categories, all_debts=all_debt)
+                               categories=categories, all_debts=all_debt)
     else:
         return render_template('event_table_none.html')
 
@@ -326,7 +326,6 @@ def edit_event():
             event.place = form.event_place.data,
             event.date = form.event_date.data
 
-
             participates = db.session.query(OrmUser). \
                 join(OrmParticipant, OrmParticipant.c.person_di == OrmUser.id). \
                 join(OrmEvent, OrmParticipant.c.event_id == OrmEvent.id). \
@@ -372,6 +371,7 @@ def delete_event():
     db.session.commit()
 
     return redirect(url_for('security.login'))
+
 
 if __name__ == "__main__":
     app.debug = True
