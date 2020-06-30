@@ -9,16 +9,21 @@ user_have_roles = db.Table('user_have_role',
                           )
 
 
-orm_friend = db.Table('orm_friend',
-    db.Column('id_o', db.Integer(), db.ForeignKey('orm_user.id'), primary_key=True),
-    db.Column('id_f', db.Integer(), db.ForeignKey('orm_user.id'), primary_key=True)
-                     )
+Orm_Friend = db.Table('orm_friend',
+                      db.Column('id_o', db.Integer(), db.ForeignKey('orm_user.id'), primary_key=True),
+                      db.Column('id_f', db.Integer(), db.ForeignKey('orm_user.id'), primary_key=True)
+                      )
 
 
-class OrmParticipant(db.Model):
-    __tablename__ = 'orm_participant'
-    person_di = db.Column(db.Integer(), db.ForeignKey('orm_user.id'), primary_key=True)
-    event_id = db.Column(db.Integer(), db.ForeignKey('orm_event.id'), primary_key=True)
+# class OrmParticipant(db.Model):
+#     __tablename__ = 'orm_participant'
+#     person_di = db.Column(db.Integer(), db.ForeignKey('orm_user.id'), primary_key=True)
+#     event_id = db.Column(db.Integer(), db.ForeignKey('orm_event.id'), primary_key=True)
+
+OrmParticipant = db.Table('orm_participant',
+    db.Column('person_di', db.Integer(), db.ForeignKey('orm_user.id'), primary_key=True),
+    db.Column('event_id', db.Integer(), db.ForeignKey('orm_event.id'), primary_key=True)
+)
 
 
 class OrmPay(db.Model):
@@ -52,15 +57,15 @@ class OrmUser(db.Model, UserMixin):
 
     right_nodes  = db.relationship(
         "OrmUser",
-        secondary=orm_friend,
-        primaryjoin=(id == orm_friend.c.id_o),
-        secondaryjoin=(id == orm_friend.c.id_f),
+        secondary=Orm_Friend,
+        primaryjoin=(id == Orm_Friend.c.id_o),
+        secondaryjoin=(id == Orm_Friend.c.id_f),
         backref = 'parents'
     )
 
     roles = db.relationship("OrmRole", secondary=user_have_roles, backref=db.backref('person', lazy='dynamic'))
 
-    event = db.relationship("OrmParticipant")
+    event = db.relationship("OrmEvent", secondary=OrmParticipant)
 
     check_pay = db.relationship("OrmPay")
     check_deb = db.relationship("OrmDebt")
@@ -102,7 +107,7 @@ class OrmEvent(db.Model):
     date = db.Column(db.Date, nullable=False)
 
     check = db.relationship("OrmCheck")
-    user = db.relationship("OrmParticipant")
+    user = db.relationship("OrmUser",secondary=OrmParticipant)
 
 
 db.create_all()

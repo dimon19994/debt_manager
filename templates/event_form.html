@@ -59,19 +59,18 @@
                         {% endif %}
                     </div>
 
-                    <select id="example-getting-started" multiple="multiple">
-                        {% for friend in friends %}
-                            <option value="cheese">Cheese</option>
-                            <option value="tomatoes">Tomatoes</option>
-                            <option value="mozarella">Mozzarella</option>
-                            <option value="mushrooms">Mushrooms</option>
-                            <option value="pepperoni">Pepperoni</option>
-                            <option value="onions">Onions</option>
-                        {% endfor %}
-                    </select>
+                    <div class="form-group">
+                        {{ form.event_friends.label }}
+                        {{ form.event_friends(class_="form-control", multiple="multiple") }}
 
-
-                    <br>
+                        {% if form.event_friends.errors %}
+                            <div class="alert alert-danger" role="alert">
+                                {% for message in form.event_friends.errors %}
+                                    <div>{{ message }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
 
                     {{ form.submit(class_="btn btn-success") }}
 
@@ -85,12 +84,7 @@
 
     <script>
         $(document).ready(function() {
-            $('#example-getting-started').multiselect();
+            $('#event_friends').multiselect();
         });
     </script>
-
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap-multiselect.css') }}">
-    <script src="{{ url_for('static', filename='js/bootstrap-multiselect.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/bootstrap_new.min.js') }}"></script>
-
 {% endblock %}

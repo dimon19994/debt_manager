@@ -129,17 +129,17 @@ def delete_person():
 @app.route('/friends', methods=['GET'])
 @login_required
 def friends():
-    all_0 = db.session.query(orm_friend.c.id_o.label("col_1"), orm_friend.c.id_f.label("col_2")).filter(
-        orm_friend.c.id_o == current_user.id)
-    all_1 = db.session.query(orm_friend.c.id_o.label("col_1"), orm_friend.c.id_f.label("col_2"))
-    all_2 = db.session.query(orm_friend.c.id_f.label("col_1"), orm_friend.c.id_o.label("col_2"))
+    all_0 = db.session.query(Orm_Friend.c.id_o.label("col_1"), Orm_Friend.c.id_f.label("col_2")).filter(
+        Orm_Friend.c.id_o == current_user.id)
+    all_1 = db.session.query(Orm_Friend.c.id_o.label("col_1"), Orm_Friend.c.id_f.label("col_2"))
+    all_2 = db.session.query(Orm_Friend.c.id_f.label("col_1"), Orm_Friend.c.id_o.label("col_2"))
     except_all = all_0.except_(all_1.except_(all_2)).with_entities("col_2")
     result_request = db.session.query(OrmUser).filter(OrmUser.id.in_(except_all)).all()
 
-    all_0 = db.session.query(orm_friend.c.id_o.label("col_1"), orm_friend.c.id_f.label("col_2")).filter(
-        orm_friend.c.id_f == current_user.id)
-    all_1 = db.session.query(orm_friend.c.id_f.label("col_1"), orm_friend.c.id_o.label("col_2")).filter(
-        orm_friend.c.id_o == current_user.id)
+    all_0 = db.session.query(Orm_Friend.c.id_o.label("col_1"), Orm_Friend.c.id_f.label("col_2")).filter(
+        Orm_Friend.c.id_f == current_user.id)
+    all_1 = db.session.query(Orm_Friend.c.id_f.label("col_1"), Orm_Friend.c.id_o.label("col_2")).filter(
+        Orm_Friend.c.id_o == current_user.id)
     except_all = all_0.except_(all_1).with_entities("col_1")
     result_friends = db.session.query(OrmUser).filter(OrmUser.id.in_(except_all)).all()
 
@@ -151,8 +151,8 @@ def friends():
 def delete_friend():
     person_id = request.form['person_id']
 
-    dell = orm_friend.delete().where(or_(and_(orm_friend.c.id_o == current_user.id, orm_friend.c.id_f == person_id),
-                                         and_(orm_friend.c.id_f == current_user.id, orm_friend.c.id_o == person_id)))
+    dell = Orm_Friend.delete().where(or_(and_(Orm_Friend.c.id_o == current_user.id, Orm_Friend.c.id_f == person_id),
+                                         and_(Orm_Friend.c.id_f == current_user.id, Orm_Friend.c.id_o == person_id)))
 
     db.session.execute(dell)
     db.session.commit()
@@ -165,7 +165,7 @@ def delete_friend():
 def except_friend():
     person_id = request.form['person_id']
 
-    insert = orm_friend.insert().values(id_o=current_user.id, id_f=person_id)
+    insert = Orm_Friend.insert().values(id_o=current_user.id, id_f=person_id)
 
     db.session.execute(insert)
     db.session.commit()
@@ -178,7 +178,7 @@ def except_friend():
 def deny_friend():
     person_id = request.form['person_id']
 
-    dell = orm_friend.delete().where(and_(orm_friend.c.id_f == current_user.id, orm_friend.c.id_o == person_id))
+    dell = Orm_Friend.delete().where(and_(Orm_Friend.c.id_f == current_user.id, Orm_Friend.c.id_o == person_id))
 
     db.session.execute(dell)
     db.session.commit()
@@ -193,7 +193,7 @@ def add_fiend():
 
     frienf_id = db.session.query(OrmUser.id).filter(OrmUser.username == person_id).one()
 
-    insert = orm_friend.insert().values(id_o=current_user.id, id_f=frienf_id)
+    insert = Orm_Friend.insert().values(id_o=current_user.id, id_f=frienf_id)
 
     db.session.execute(insert)
     db.session.commit()
@@ -205,7 +205,7 @@ def add_fiend():
 @login_required
 def events():
     result = db.session.query(OrmEvent).join(OrmParticipant).filter(
-        and_(OrmEvent.id == OrmParticipant.event_id, OrmParticipant.person_di == current_user.id)).all()
+        and_(OrmEvent.id == OrmParticipant.c.event_id, OrmParticipant.c.person_di == current_user.id)).all()
 
     return render_template('event.html', events=result)
 
@@ -217,16 +217,16 @@ def detail_event():
 
     participant_id = \
         db.session.query(OrmUser.id, OrmUser.name). \
-            join(OrmParticipant).filter(OrmParticipant.person_di == OrmUser.id). \
-            join(OrmEvent).filter(OrmEvent.id == OrmParticipant.event_id).all()
+            join(OrmParticipant).filter(OrmParticipant.c.person_di == OrmUser.id). \
+            join(OrmEvent).filter(OrmEvent.id == OrmParticipant.c.event_id).all()
 
     pay_info = \
-        db.session.query(func.coalesce(func.sum(OrmPay.sum), 0), OrmParticipant.person_di). \
-            join(OrmEvent, OrmEvent.id == OrmParticipant.event_id). \
+        db.session.query(func.coalesce(func.sum(OrmPay.sum), 0), OrmParticipant.c.person_di). \
+            join(OrmEvent, OrmEvent.id == OrmParticipant.c.event_id). \
             join(OrmCheck, OrmEvent.id == OrmCheck.event_id). \
             outerjoin(OrmPay, and_(OrmCheck.id == OrmPay.check_di, OrmCheck.event_id == events_id,
-                                   OrmParticipant.person_di == OrmPay.person_id)). \
-            group_by(OrmParticipant.person_di).order_by(OrmParticipant.person_di).all()
+                                   OrmParticipant.c.person_di == OrmPay.person_id)). \
+            group_by(OrmParticipant.c.person_di).order_by(OrmParticipant.c.person_di).all()
 
     categorical_debt = \
         db.session.query(func.sum(OrmDebt.sum), OrmDebt.person_id, OrmDebt.category). \
@@ -246,25 +246,28 @@ def detail_event():
             join(OrmCheck, and_(OrmItem.check_id == OrmCheck.id, OrmCheck.event_id == events_id)). \
             group_by(OrmDebt.category).all()
 
-    return render_template('event_table.html', people=participant_id, pay=pay_info, debt=categorical_debt,
+    if len(categories) > 0:
+        return render_template('event_table.html', people=participant_id, pay=pay_info, debt=categorical_debt,
                            categories=categories, all_debts=all_debt)
+    else:
+        return render_template('event_table_none.html')
 
 
 @app.route('/new_event', methods=['GET', 'POST'])
 def new_event():
     form = EventForm()
 
-    all_0 = db.session.query(orm_friend.c.id_o.label("col_1"), orm_friend.c.id_f.label("col_2")).filter(
-        orm_friend.c.id_o == current_user.id)
-    all_1 = db.session.query(orm_friend.c.id_o.label("col_1"), orm_friend.c.id_f.label("col_2"))
-    all_2 = db.session.query(orm_friend.c.id_f.label("col_1"), orm_friend.c.id_o.label("col_2"))
+    all_0 = db.session.query(Orm_Friend.c.id_o.label("col_1"), Orm_Friend.c.id_f.label("col_2")).filter(
+        Orm_Friend.c.id_o == current_user.id)
+    all_1 = db.session.query(Orm_Friend.c.id_o.label("col_1"), Orm_Friend.c.id_f.label("col_2"))
+    all_2 = db.session.query(Orm_Friend.c.id_f.label("col_1"), Orm_Friend.c.id_o.label("col_2"))
     except_all = all_0.except_(all_1.except_(all_2)).with_entities("col_2")
     result_request = db.session.query(OrmUser).filter(OrmUser.id.in_(except_all)).all()
+    form.event_friends.choices = [(g.id, g.name + " " + g.surname) for g in result_request]
 
     if request.method == 'POST':
         if not form.validate():
-            return render_template('event_form.html', form=form, form_name="New event", action="new_event",
-                                   friends=result_request)
+            return render_template('event_form.html', form=form, form_name="New event", action="new_event")
         else:
             new_event = OrmEvent(
                 name=form.event_name.data,
@@ -272,14 +275,103 @@ def new_event():
                 date=form.event_date.data
             )
 
-            db.session.add(new_event)
+            add_event = db.session.query(OrmUser).filter(OrmUser.id.in_(form.event_friends.raw_data)).all()
+            me = db.session.query(OrmUser).filter(OrmUser.id == current_user.id).one()
+            add_event.append(me)
+
+            for i in add_event:
+                i.event.append(new_event)
+                db.session.add(i)
+
+            db.session.commit()
+            return redirect(url_for('events'))
+
+    return render_template('event_form.html', form=form, form_name="New event", action="new_event")
+
+
+@app.route('/edit_event', methods=['GET', 'POST'])
+@login_required
+def edit_event():
+    form = EventForm()
+
+    all_0 = db.session.query(Orm_Friend.c.id_o.label("col_1"), Orm_Friend.c.id_f.label("col_2")).filter(
+        Orm_Friend.c.id_o == current_user.id)
+    all_1 = db.session.query(Orm_Friend.c.id_o.label("col_1"), Orm_Friend.c.id_f.label("col_2"))
+    all_2 = db.session.query(Orm_Friend.c.id_f.label("col_1"), Orm_Friend.c.id_o.label("col_2"))
+    except_all = all_0.except_(all_1.except_(all_2)).with_entities("col_2")
+    result_request = db.session.query(OrmUser).filter(OrmUser.id.in_(except_all)).all()
+    form.event_friends.choices = [(g.id, g.name + " " + g.surname) for g in result_request]
+
+    if request.method == 'GET':
+
+        event_id = request.args.get('event_id')
+        event = db.session.query(OrmEvent).filter(OrmEvent.id == event_id).one()
+
+        form.event_id.data = event_id
+        form.event_name.data = event.name
+        form.event_place.data = event.place
+        form.event_date.data = event.date
+
+        return render_template('event_form.html', form=form, form_name="Edit event", action="edit_event")
+
+
+    else:
+
+        if not form.validate():
+            return render_template('event_form.html', form=form, form_name="Edit event", action="edit_event")
+        else:
+            event = db.session.query(OrmEvent).filter(OrmEvent.id == form.event_id.data).one()
+
+            event.name = form.event_name.data,
+            event.place = form.event_place.data,
+            event.date = form.event_date.data
+
+
+            participates = db.session.query(OrmUser). \
+                join(OrmParticipant, OrmParticipant.c.person_di == OrmUser.id). \
+                join(OrmEvent, OrmParticipant.c.event_id == OrmEvent.id). \
+                filter(OrmEvent.id == form.event_id.data)
+
+            add_event = db.session.query(OrmUser).filter(OrmUser.id.in_(form.event_friends.raw_data))
+            me = db.session.query(OrmUser).filter(OrmUser.id == current_user.id)
+
+            to_del = participates.except_(add_event.union(me)).all()
+
+            to_add = add_event.union(me).except_(participates).all()
+
+            for i in to_del:
+                i.event.remove(event)
+                db.session.add(i)
+
+            for i in to_add:
+                i.event.append(event)
+                db.session.add(i)
+
             db.session.commit()
 
             return redirect(url_for('events'))
 
-    return render_template('event_form.html', form=form, form_name="New event", action="new_event",
-                           friends=result_request)
 
+@app.route('/delete_event', methods=['POST'])
+@login_required
+def delete_event():
+    event_id = request.form['event_id']
+    event = db.session.query(OrmEvent).filter(OrmEvent.id == event_id).one()
+
+    participates = db.session.query(OrmUser). \
+        join(OrmParticipant, OrmParticipant.c.person_di == OrmUser.id). \
+        join(OrmEvent, OrmParticipant.c.event_id == OrmEvent.id). \
+        filter(OrmEvent.id == event_id).all()
+
+    for i in participates:
+        i.event.remove(event)
+        db.session.add(i)
+    db.session.commit()
+
+    db.session.delete(event)
+    db.session.commit()
+
+    return redirect(url_for('security.login'))
 
 if __name__ == "__main__":
     app.debug = True
