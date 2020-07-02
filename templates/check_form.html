@@ -1,0 +1,78 @@
+
+
+{% extends "index.html" %}
+
+{% block content %}
+
+    <!--https://www.codeply.com/go/nhbdi2FkJm-->
+
+
+    <div class="col-md-6 mx-auto">
+
+        <!-- form card login -->
+        <div class="card rounded-0">
+
+            <div class="card-header">
+                <h3 class="mb-0">{{ form_name }}</h3>
+            </div>
+            <div class="card-body">
+
+                <form class="form" action="/{{ action }}" method=post enctype="multipart/form-data">
+                    {{ form.hidden_tag() }}
+
+                    <div class="form-group">
+                        {{ form.check_description.label }}
+                        {{ form.check_description(class_="form-control") }}
+
+                        {% if form.check_description.errors %}
+                            <div class="alert alert-danger" role="alert">
+                                {% for message in form.check_description.errors %}
+                                    <div>{{ message }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        {{ form.check_sum.label }}
+                        {{ form.check_sum(class_="form-control") }}
+
+                        {% if form.check_sum.errors %}
+                            <div class="alert alert-danger" role="alert">
+                                {% for message in form.check_sum.errors %}
+                                    <div>{{ message }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        {{ form.check_item.label }}
+                        {{ form.check_item(class_="form-control") }}
+
+                        {% if form.check_item.errors %}
+                            <div class="alert alert-danger" role="alert">
+                                {% for message in form.check_item.errors %}
+                                    <div>{{ message }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <button type="button">Добавить</button>
+                    </div>
+
+
+
+                    {{ form.submit(class_="btn btn-success") }}
+
+                </form>
+            </div>
+            <!--/card-block-->
+        </div>
+        <!-- /form card login -->
+
+    </div>
+
+{% endblock %}

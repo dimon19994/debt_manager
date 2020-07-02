@@ -13,9 +13,10 @@ from sqlalchemy.sql import func
 
 from forms.person_form import PersonForm
 from forms.event_form import EventForm
+from forms.check_form import CheckForm
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:01200120@localhost/debt_manager'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:1998@localhost/debt_manager'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 app.secret_key = 'key'
@@ -30,9 +31,21 @@ user_datastore = SQLAlchemyUserDatastore(db, OrmUser, OrmRole)
 security = Security(app, user_datastore)
 
 
+@app.route('/new')
+# @roles_accepted("Admin")
+def new():
+    role_user = OrmRole(name="User")
+    role_admin = OrmRole(name="Admin")
+    db.session.add_all([role_user, role_admin])
+    db.session.commit()
+
+    return redirect(url_for('security.login'))
+
+
 @app.route('/', methods=['GET', 'POST'])
-@roles_accepted("User")
+# @roles_accepted("User")
 def root():
+    # return redirect(url_for('security.login'))
     return render_template('index.html')
 
 
@@ -371,6 +384,47 @@ def delete_event():
     db.session.commit()
 
     return redirect(url_for('security.login'))
+
+
+@app.route('/checks', methods=['GET'])
+@login_required
+def checks():
+    result = db.session.query(OrmCheck.id, OrmCheck.description, OrmCheck.sum, OrmEvent.name, OrmEvent.date).\
+        join(OrmEvent, OrmEvent.id == OrmCheck.event_id).\
+        join(OrmParticipant, OrmParticipant.c.event_id == OrmEvent.id).\
+        join(OrmUser, OrmParticipant.c.person_di == OrmUser.id).filter(OrmUser.id == current_user.id).all()
+
+    return render_template('event.html', checks=result)
+
+
+@app.route('/new_check', methods=['GET', 'POST'])
+def new_check():
+    form = CheckForm()
+
+    if request.method == 'POST':
+        if not form.validate():
+            return render_template('check_form.html', form=form, form_name="New check", action="new_check")
+        else:
+            new_person = user_datastore.create_user(
+                email=form.person_email.data,
+                username=form.person_username.data,
+                password=form.person_password.data,
+                name=form.person_name.data,
+                surname=form.person_surname.data,
+                card=form.person_card.data,
+            )
+
+            role = db.session.query(OrmRole).filter(OrmRole.name == "User").one()
+
+            new_person.roles.append(role)
+
+            db.session.add(new_person)
+            db.session.commit()
+
+            return redirect(url_for('security.login'))
+
+    return render_template('check_form.html', form=form, form_name="New check", action="new_check")
+
 
 
 if __name__ == "__main__":

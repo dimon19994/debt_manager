@@ -32,5 +32,10 @@ $("button[name='btn_edit_event']").click(function() {
 
 });
 
+$("button[name='btn_new_check']").click(function() {
+
+    window.location = "new_check?event_id="+$(this).data('event_id');
+
+});
 
 
