@@ -1,6 +1,7 @@
 from flask_wtf import Form
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, PasswordField, DateField, HiddenField, IntegerField, FloatField
+from wtforms import StringField, SubmitField, PasswordField, DateField, HiddenField, IntegerField, FloatField, \
+    FieldList, SelectField
 from flask_wtf.file import FileField
 from wtforms import validators
 
@@ -13,16 +14,31 @@ class CheckForm(Form):
         validators.Length(5, 200, "Username should be from 3 to 20 symbols")
     ])
 
-    check_sum = FloatField("Сумма: ", [
+    check_sum = FieldList(FloatField("Сумма: ", [
         validators.DataRequired("Please enter your username."),
         validators.NumberRange(0.01, 100000, "Username should be from 0.01 to 100000 symbols")
-    ])
+    ]), min_entries=1)
 
-    check_item = StringField("Продукт: ", [
+    check_item = FieldList(StringField("Продукт: ", [
         validators.DataRequired("Please enter your password."),
         validators.Length(5, 100, "Password should be from 5 to 100 symbols")
+    ]), min_entries=1)
+
+    item_cost = FieldList(FloatField("Цена продукта: ", [
+        validators.DataRequired("Please enter your username."),
+        validators.NumberRange(0.01, 100000, "Username should be from 0.01 to 100000 symbols")
+    ]), min_entries=1)
+
+    check_sale = FloatField("Надбавка/Скидка (+/-): ", [
+        # validators.DataRequired("Please enter your username."),
+        validators.NumberRange(0.00, 100000, "Username should be from 0.00 to 100000 symbols")
     ])
 
+    item_type = FieldList(SelectField("Тип продукта: ", [validators.DataRequired("Please enter your birthday.")],
+                                      choices=[('Еда', 'Еда'), ('Алкоголь', 'Алкоголь'),
+                                               ('Квартира', 'Квартира'), ('Хрень', 'Хрень'),
+                                               ('Билеты', 'Билеты')]), min_entries=1)
+
+    check_pay = FieldList(SelectField("Плательщик: ", coerce=int), min_entries=1)
+
     submit = SubmitField("Save")
-
-

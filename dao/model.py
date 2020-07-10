@@ -39,7 +39,6 @@ class OrmDebt(db.Model):
     item_di = db.Column(db.Integer(), db.ForeignKey('orm_item.id'), primary_key=True)
     person_id = db.Column(db.Integer(), db.ForeignKey('orm_user.id'), primary_key=True)
     sum = db.Column(db.Float(), nullable=False)
-    category = db.Column(db.String(100), nullable=False)
 
 
 class OrmUser(db.Model, UserMixin):
@@ -94,6 +93,7 @@ class OrmItem(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     cost = db.Column(db.Float, nullable=False)
+    category = db.Column(db.String(100), nullable=False)
     check_id = db.Column(db.Integer, db.ForeignKey('orm_check.id'))
 
     user_deb = db.relationship("OrmDebt")

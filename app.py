@@ -4,19 +4,18 @@
 
 
 from flask import Flask, render_template, redirect, url_for, request
-
-from sqlalchemy import or_, and_
 from flask_security import SQLAlchemyUserDatastore, Security, login_required, current_user
-from flask_security.decorators import roles_accepted
 from flask_security.utils import hash_password
+from sqlalchemy import or_, and_
 from sqlalchemy.sql import func
 
-from forms.person_form import PersonForm
-from forms.event_form import EventForm
 from forms.check_form import CheckForm
+from forms.debt_form import DebtForm
+from forms.event_form import EventForm
+from forms.person_form import PersonForm
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:1998@localhost/debt_manager'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:01200120@localhost/debt_manager'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 app.secret_key = 'key'
@@ -230,22 +229,24 @@ def detail_event():
 
     participant_id = \
         db.session.query(OrmUser.id, OrmUser.name). \
-            join(OrmParticipant).filter(OrmParticipant.c.person_di == OrmUser.id). \
-            join(OrmEvent).filter(OrmEvent.id == OrmParticipant.c.event_id).all()
+            join(OrmParticipant, OrmParticipant.c.person_di == OrmUser.id). \
+            join(OrmEvent, OrmEvent.id == OrmParticipant.c.event_id).\
+            filter(OrmEvent.id == events_id).\
+            order_by(OrmUser.id).all()
 
     pay_info = \
         db.session.query(func.coalesce(func.sum(OrmPay.sum), 0), OrmParticipant.c.person_di). \
             join(OrmEvent, OrmEvent.id == OrmParticipant.c.event_id). \
             join(OrmCheck, OrmEvent.id == OrmCheck.event_id). \
-            outerjoin(OrmPay, and_(OrmCheck.id == OrmPay.check_di, OrmCheck.event_id == events_id,
-                                   OrmParticipant.c.person_di == OrmPay.person_id)). \
+            outerjoin(OrmPay, and_(OrmCheck.id == OrmPay.check_di, OrmParticipant.c.person_di == OrmPay.person_id)). \
+            filter(OrmCheck.event_id == events_id). \
             group_by(OrmParticipant.c.person_di).order_by(OrmParticipant.c.person_di).all()
 
     categorical_debt = \
-        db.session.query(func.sum(OrmDebt.sum), OrmDebt.person_id, OrmDebt.category). \
+        db.session.query(func.sum(OrmDebt.sum), OrmDebt.person_id, OrmItem.category). \
             join(OrmItem, OrmDebt.item_di == OrmItem.id). \
             join(OrmCheck, and_(OrmItem.check_id == OrmCheck.id, OrmCheck.event_id == events_id)). \
-            group_by(OrmDebt.person_id, OrmDebt.category).order_by(OrmDebt.person_id, OrmDebt.category).all()
+            group_by(OrmDebt.person_id, OrmItem.category).order_by(OrmDebt.person_id, OrmItem.category).all()
 
     all_debt = \
         db.session.query(func.sum(OrmDebt.sum), OrmDebt.person_id). \
@@ -254,10 +255,9 @@ def detail_event():
             group_by(OrmDebt.person_id).order_by(OrmDebt.person_id).all()
 
     categories = \
-        db.session.query(OrmDebt.category). \
-            join(OrmItem, OrmDebt.item_di == OrmItem.id). \
+        db.session.query(OrmItem.category). \
             join(OrmCheck, and_(OrmItem.check_id == OrmCheck.id, OrmCheck.event_id == events_id)). \
-            group_by(OrmDebt.category).all()
+            group_by(OrmItem.category).all()
 
     if len(categories) > 0:
         return render_template('event_table.html', people=participant_id, pay=pay_info, debt=categorical_debt,
@@ -389,43 +389,108 @@ def delete_event():
 @app.route('/checks', methods=['GET'])
 @login_required
 def checks():
-    result = db.session.query(OrmCheck.id, OrmCheck.description, OrmCheck.sum, OrmEvent.name, OrmEvent.date).\
-        join(OrmEvent, OrmEvent.id == OrmCheck.event_id).\
-        join(OrmParticipant, OrmParticipant.c.event_id == OrmEvent.id).\
+    result = db.session.query(OrmCheck.id, OrmCheck.description, OrmCheck.sum, OrmEvent.name, OrmEvent.date). \
+        join(OrmEvent, OrmEvent.id == OrmCheck.event_id). \
+        join(OrmParticipant, OrmParticipant.c.event_id == OrmEvent.id). \
         join(OrmUser, OrmParticipant.c.person_di == OrmUser.id).filter(OrmUser.id == current_user.id).all()
 
-    return render_template('event.html', checks=result)
+    return render_template('check.html', checks=result)
 
 
 @app.route('/new_check', methods=['GET', 'POST'])
 def new_check():
     form = CheckForm()
 
+    event_id = request.args.get('event_id')
+    people = db.session.query(OrmUser.id, OrmUser.name, OrmUser.surname). \
+        join(OrmParticipant, OrmParticipant.c.person_di == OrmUser.id). \
+        join(OrmEvent, OrmEvent.id == OrmParticipant.c.event_id).filter(OrmEvent.id == event_id).all()
+    for i in range(len(form.check_pay)):
+        form.check_pay[i].choices = [(g.id, g.name + " " + g.surname) for g in people]
+
     if request.method == 'POST':
         if not form.validate():
-            return render_template('check_form.html', form=form, form_name="New check", action="new_check")
+            return render_template('check_form.html', form=form, form_name="New check", action="new_check", id=event_id)
         else:
-            new_person = user_datastore.create_user(
-                email=form.person_email.data,
-                username=form.person_username.data,
-                password=form.person_password.data,
-                name=form.person_name.data,
-                surname=form.person_surname.data,
-                card=form.person_card.data,
+            add = []
+
+            new_check = OrmCheck(
+                sum=sum(form.check_sum.data),
+                description=form.check_description.data
             )
 
-            role = db.session.query(OrmRole).filter(OrmRole.name == "User").one()
+            event = db.session.query(OrmEvent).filter(OrmEvent.id == event_id).one()
+            event.check.append(new_check)
+            add.append(event)
 
-            new_person.roles.append(role)
+            for i in range(len(form.check_pay.data)):
+                new_check.user_pay.append(OrmPay(person_id=form.check_pay.data[i], sum=form.check_sum.data[i]))
 
-            db.session.add(new_person)
+            for i in range(len(form.check_item.data)):
+                new_check.item.append(OrmItem(
+                    name=form.check_item.data[i],
+                    cost=form.item_cost.data[i],
+                    category=form.item_type.data[i]
+                ))
+
+            db.session.add(event)
             db.session.commit()
 
-            return redirect(url_for('security.login'))
+            return redirect(url_for('new_debt', id=new_check.id))
 
-    return render_template('check_form.html', form=form, form_name="New check", action="new_check")
+    return render_template('check_form.html', form=form, form_name="New check", action="new_check", id=event_id)
 
 
+@app.route('/new_debt/<id>', methods=['GET', 'POST'])
+def new_debt(id):
+    form = DebtForm()
+
+    items = db.session.query(OrmItem.id, OrmItem.name, OrmItem.cost).join(OrmCheck, OrmCheck.id == OrmItem.check_id). \
+        filter(OrmCheck.id == id).all()
+
+    people = db.session.query(OrmUser.id, OrmUser.name, OrmUser.surname). \
+        join(OrmParticipant, OrmParticipant.c.person_di == OrmUser.id). \
+        join(OrmEvent, OrmParticipant.c.event_id == OrmEvent.id). \
+        join(OrmCheck, OrmEvent.id == OrmCheck.event_id). \
+        filter(OrmCheck.id == id).all()
+
+
+    if request.method == 'POST':
+        for i in range(len(items)):
+            if str(i) in str(form.debt_all):
+                price = items[i].cost/len(people)
+                for j in people:
+                    deb = OrmDebt(
+                        item_di=items[i].id,
+                        person_id=j.id,
+                        sum=price
+                    )
+                    db.session.add(deb)
+                    db.session.commit()
+            else:
+                count = form.debt_count.data[len(people)*i:len(people)*i+len(people)]
+                for j in range(len(people)):
+                    if count[j]>0:
+                        deb = OrmDebt(
+                            item_di=items[i].id,
+                            person_id=people[j].id,
+                            sum=(items[i].cost/sum(count)*count[j])
+                        )
+                        db.session.add(deb)
+                        db.session.commit()
+
+        return redirect(url_for('checks'))
+
+    for i in range(len(items)):
+        for j in range(len(people)):
+            form.debt_count.append_entry()
+            # form.debt_type[-1].name = str(items[i].id) + "-" + str(people[j].id)
+            # form.debt_type[-1].id = str(items[i].id) + "-" + str(people[j].id)
+        form.debt_all.append_entry()
+        # form.debt_type[-1].name = str(items[i].id) + "-all"
+        # form.debt_type[-1].id = str(items[i].id) + "-all"
+    return render_template('debt_form.html', form=form, form_name="New debt", action="new_debt", people=people,
+                           items=items, id=id)
 
 if __name__ == "__main__":
     app.debug = True
