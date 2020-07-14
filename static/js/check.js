@@ -38,4 +38,9 @@ $("button[name='btn_new_check']").click(function() {
 
 });
 
+$("button[name='btn_detail_check']").click(function() {
+
+    window.location = "detail_check?check_id="+$(this).data('check_id');
+
+});
 

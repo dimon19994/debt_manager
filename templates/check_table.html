@@ -1,0 +1,46 @@
+
+
+{% extends "index.html" %}
+
+{% block content %}
+
+
+
+ <div class="table-responsive">
+    <table class="table">
+         <thead>
+            <tr>
+                <th scope="col">Продукт</th>
+                <th scope="col">Цена</th>
+                {% for person in people %}
+                    <th scope="col">{{ person.name+" "+person.surname }}</th>
+                {% endfor %}
+                <th scope="col">Категория</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% set counter = {"num": 0} %}
+
+            {% for j in range(items|length) %}
+                <tr >
+                    <td> {{items[j].name}} </td>
+                    <td> {{items[j].cost}} </td>
+                    {% for i in range(people|length) %}
+                        {% if counter["num"] < debt|length and debt[counter["num"]].person_id == people[i].id and debt[counter["num"]].item_di == items[j].id %}
+                            <td>{{ debt[counter["num"]].sum }}</td>
+                            {% set _ = counter.update({'num':counter["num"] + 1}) %}
+                        {% else %}
+                            <td>0</td>
+                        {% endif %}
+                    {% endfor %}
+                    <td>{{ items[j].category }}</td>
+
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+ </div>
+
+    <script src="{{ url_for('static', filename='js/event.js') }}"></script>
+
+{% endblock %}

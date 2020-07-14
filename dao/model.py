@@ -110,4 +110,7 @@ class OrmEvent(db.Model):
     check = db.relationship("OrmCheck")
     user = db.relationship("OrmUser",secondary=OrmParticipant)
 
+
+# class Orm
+
 db.create_all()

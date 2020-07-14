@@ -492,6 +492,30 @@ def new_debt(id):
     return render_template('debt_form.html', form=form, form_name="New debt", action="new_debt", people=people,
                            items=items, id=id)
 
+
+@app.route('/detail_check', methods=['GET', 'POST'])
+@login_required
+def detail_check():
+    check_id = request.args.get('check_id')
+
+    items = db.session.query(OrmItem).\
+        join(OrmCheck, OrmCheck.id == OrmItem.check_id).\
+        filter(OrmCheck.id == check_id).order_by(OrmItem.id).all()
+
+    debt = db.session.query(OrmDebt).\
+        join(OrmItem, OrmItem.id == OrmDebt.item_di).\
+        filter(OrmItem.check_id == check_id).\
+        order_by(OrmDebt.item_di, OrmDebt.person_id).all()
+
+    people = db.session.query(OrmUser). \
+        join(OrmParticipant, OrmParticipant.c.person_di == OrmUser.id). \
+        join(OrmEvent, OrmParticipant.c.event_id == OrmEvent.id). \
+        join(OrmCheck, OrmEvent.id == OrmCheck.event_id). \
+        filter(OrmCheck.id == check_id).all()
+
+    return render_template('check_table.html', items=items, debt=debt, people=people)
+
+
 if __name__ == "__main__":
     app.debug = True
     app.run()
