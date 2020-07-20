@@ -6,9 +6,9 @@
 
 
 
- <div class="table-responsive">
-    <table class="table">
-         <thead>
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
             <tr>
                 <th scope="col"></th>
                 <th scope="col">Закинул</th>
@@ -17,37 +17,67 @@
                     <th scope="col">{{ category[0] }}</th>
                 {% endfor %}
             </tr>
-        </thead>
-        <tbody>
-        {% set counter = {"num": 0} %}
+            </thead>
+            <tbody>
+            {% set counter = {"num": 0} %}
+            {% set repay_1 = {"num": 0} %}
+            {% set repay_2 = {"num": 0} %}
 
-        {% for i in range(people|length) %}
-            <tr >
-                <td> {{people[i].name}} </td>
-                <td>{{pay[i][0]}}</td>
-                {% if (all_debts[i][0] - pay[i][0])|round(2) < 0 %}
-                    <td style="background-color: #9bce91">
-                        {{(all_debts[i][0] - pay[i][0])|round(2)}}
-                    </td>
-                {% else %}
-                    <td style="background-color: #e8a09e">
-                        {{(all_debts[i][0] - pay[i][0])|round(2)}}
-                    </td>
-                {% endif %}
-                {% for j in range(categories|length) %}
-                    {% if counter["num"] < debt|length and debt[counter["num"]].person_id == people[i].id and debt[counter["num"]].category == categories[j].category %}
-                        <td>{{ debt[counter["num"]][0] }}</td>
-                        {% set _ = counter.update({'num':counter["num"] + 1}) %}
+            {% for i in range(people|length) %}
+                <tr>
+                    <td> {{ people[i].name }} </td>
+                    {% if repay_1["num"] < who_repay|length and people[i].id == who_repay[repay_1["num"]].id %}
+                        <td>{{ pay[i][0] + who_repay[repay_1["num"]][0] }}</td>
                     {% else %}
-                        <td>0</td>
+                        <td>{{ pay[i][0] }}</td>
                     {% endif %}
-                {% endfor %}
 
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
- </div>
+                    {% if repay_2["num"] < whom_repay|length and repay_1["num"] < who_repay|length and
+                            people[i].id == whom_repay[repay_2["num"]].id and people[i].id == who_repay[repay_1["num"]].id %}
+                        {% set debts = (all_debts[i][0] - pay[i][0]) +
+                                whom_repay[repay_2["num"]][0] - who_repay[repay_1["num"]][0]|round(2) %}
+                        {% set _ = repay_2.update({'num':repay_2["num"] + 1}) %}
+                        {% set _ = repay_1.update({'num':repay_1["num"] + 1}) %}
+                    {% elif repay_2["num"] < whom_repay|length and people[i].id == whom_repay[repay_2["num"]].id %}
+                        {% set debts = (all_debts[i][0] - pay[i][0]) + whom_repay[repay_2["num"]][0]%}
+                        {% set _ = repay_2.update({'num':repay_2["num"] + 1}) %}
+                    {% elif repay_1["num"] < who_repay|length and people[i].id == who_repay[repay_1["num"]].id %}
+                        {% set debts = (all_debts[i][0] - pay[i][0]) - who_repay[repay_1["num"]][0]|round(2) %}
+                        {% set _ = repay_1.update({'num':repay_1["num"] + 1}) %}
+                    {% else %}
+                        {% set debts = (all_debts[i][0] - pay[i][0]) %}
+                    {% endif %}
+
+                    {% if debts < -1 %}
+                        <td style="background-color: #9ee8a0">
+                            {{ debts|round(2) }}
+                        </td>
+                    {% elif debts > 1 %}
+                        <td style="background-color: #e8a09e">
+                            {{ debts|round(2) }}
+                        </td>
+                    {% else %}
+                        <td style="background-color: #a09ee8">
+                            {{ debts|round(2) }}
+                        </td>
+                    {% endif %}
+
+                    {% for j in range(categories|length) %}
+                        {% if counter["num"] < debt|length and debt[counter["num"]].person_id == people[i].id and debt[counter["num"]].category == categories[j].category %}
+                            <td>{{ debt[counter["num"]][0] }}</td>
+                            {% set _ = counter.update({'num':counter["num"] + 1}) %}
+                        {% else %}
+                            <td>0</td>
+                        {% endif %}
+                    {% endfor %}
+
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <button type="button" class="btn btn-success" name="btn_repay" data-event_id="{{ id }}">Вернуть долг</button>
 
     <script src="{{ url_for('static', filename='js/event.js') }}"></script>
 

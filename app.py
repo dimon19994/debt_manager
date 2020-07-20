@@ -13,6 +13,7 @@ from forms.check_form import CheckForm
 from forms.debt_form import DebtForm
 from forms.event_form import EventForm
 from forms.person_form import PersonForm
+from forms.repay_form import RepayForm
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:01200120@localhost/debt_manager'
@@ -259,9 +260,19 @@ def detail_event():
             join(OrmCheck, and_(OrmItem.check_id == OrmCheck.id, OrmCheck.event_id == events_id)). \
             group_by(OrmItem.category).all()
 
+    who_repay = db.session.query(func.sum(OrmRepay.sum), OrmRepay.id_debt.label('id')). \
+            filter(and_(OrmRepay.id_event == events_id, OrmRepay.active)). \
+            group_by(OrmRepay.id_debt).\
+            order_by(OrmRepay.id_debt).all()
+
+    whom_repay = db.session.query(func.sum(OrmRepay.sum), OrmRepay.id_repay.label('id')). \
+        filter(and_(OrmRepay.id_event == events_id, OrmRepay.active)). \
+        group_by(OrmRepay.id_repay). \
+        order_by(OrmRepay.id_repay).all()
+
     if len(categories) > 0:
         return render_template('event_table.html', people=participant_id, pay=pay_info, debt=categorical_debt,
-                               categories=categories, all_debts=all_debt)
+                               categories=categories, all_debts=all_debt, id=events_id, who_repay=who_repay, whom_repay=whom_repay)
     else:
         return render_template('event_table_none.html')
 
@@ -404,7 +415,8 @@ def new_check():
     event_id = request.args.get('event_id')
     people = db.session.query(OrmUser.id, OrmUser.name, OrmUser.surname). \
         join(OrmParticipant, OrmParticipant.c.person_di == OrmUser.id). \
-        join(OrmEvent, OrmEvent.id == OrmParticipant.c.event_id).filter(OrmEvent.id == event_id).all()
+        join(OrmEvent, OrmEvent.id == OrmParticipant.c.event_id).filter(OrmEvent.id == event_id).\
+        order_by(OrmUser.id).all()
     for i in range(len(form.check_pay)):
         form.check_pay[i].choices = [(g.id, g.name + " " + g.surname) for g in people]
 
@@ -452,7 +464,7 @@ def new_debt(id):
         join(OrmParticipant, OrmParticipant.c.person_di == OrmUser.id). \
         join(OrmEvent, OrmParticipant.c.event_id == OrmEvent.id). \
         join(OrmCheck, OrmEvent.id == OrmCheck.event_id). \
-        filter(OrmCheck.id == id).all()
+        filter(OrmCheck.id == id).order_by(OrmUser.id).all()
 
 
     if request.method == 'POST':
@@ -511,9 +523,48 @@ def detail_check():
         join(OrmParticipant, OrmParticipant.c.person_di == OrmUser.id). \
         join(OrmEvent, OrmParticipant.c.event_id == OrmEvent.id). \
         join(OrmCheck, OrmEvent.id == OrmCheck.event_id). \
-        filter(OrmCheck.id == check_id).all()
+        filter(OrmCheck.id == check_id).order_by(OrmUser.id).all()
 
     return render_template('check_table.html', items=items, debt=debt, people=people)
+
+
+@app.route('/new_repay', methods=['GET', 'POST'])
+def new_repay():
+    form = RepayForm()
+
+    event_id = request.args.get('event_id')
+    people = db.session.query(OrmUser.id, OrmUser.name, OrmUser.surname). \
+        join(OrmParticipant, OrmParticipant.c.person_di == OrmUser.id). \
+        join(OrmEvent, OrmEvent.id == OrmParticipant.c.event_id).filter(OrmEvent.id == event_id)
+    me = db.session.query(OrmUser.id, OrmUser.name, OrmUser.surname).\
+        filter(OrmUser.id == current_user.id)
+    people = people.except_(me).order_by(OrmUser.id).all()
+
+    form.repay_id.choices = [(g.id, g.name + " " + g.surname) for g in people]
+
+    form.event_id.data = event_id
+    form.my_id.data = current_user.id
+
+    if request.method == 'POST':
+        if not form.validate():
+            return render_template('repey_form.html', form=form, form_name="New repay", action="new_repay", id=event_id)
+        else:
+            new_repay = OrmRepay(
+                id_event=form.event_id.data,
+                id_debt=form.my_id.data,
+                id_repay=form.repay_id.data,
+                sum=form.repay_sum.data,
+                active=True
+                #TODO Поменять на False и добавить отображение
+            )
+
+            db.session.add(new_repay)
+            db.session.commit()
+
+            return redirect(url_for('events'))
+
+
+    return render_template('repey_form.html', form=form, form_name="New repay", action="new_repay", id=event_id)
 
 
 if __name__ == "__main__":

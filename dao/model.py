@@ -41,6 +41,26 @@ class OrmDebt(db.Model):
     sum = db.Column(db.Float(), nullable=False)
 
 
+class OrmRepay(db.Model):
+    __tablename__ = 'orm_repay'
+    id = db.Column(db.Integer, primary_key=True)
+    id_debt = db.Column(db.Integer, db.ForeignKey('orm_user.id'), nullable=False)
+    id_repay = db.Column(db.Integer, db.ForeignKey('orm_user.id'), nullable=False)
+    id_event = db.Column(db.Integer, db.ForeignKey('orm_event.id'), nullable=False)
+    sum = db.Column(db.Float, nullable=False)
+    active = db.Column(db.Boolean, nullable=False)
+
+
+# OrmRepay = db.Table('orm_repay',
+#                     db.Column("id", db.Integer, primary_key=True),
+#                     db.Column("id_debt", db.Integer, db.ForeignKey('orm_user.id'), nullable=False),
+#                     db.Column("id_repay", db.Integer, db.ForeignKey('orm_user.id'), nullable=False),
+#                     db.Column("id_event", db.Integer, db.ForeignKey('orm_event.id'), nullable=False),
+#                     db.Column("sum", db.Float, nullable=False),
+#                     db.Column("active", db.Boolean, nullable=False)
+#         )
+
+
 class OrmUser(db.Model, UserMixin):
     __tablename__ = 'orm_user'
     id = db.Column(db.Integer, primary_key=True)
@@ -55,13 +75,23 @@ class OrmUser(db.Model, UserMixin):
     # id_ovn = db.relationship("ormFriend")
     # id_fri = db.relationship("ormFriend")
 
-    right_nodes  = db.relationship(
+    friends = db.relationship(
         "OrmUser",
         secondary=Orm_Friend,
         primaryjoin=(id == Orm_Friend.c.id_o),
         secondaryjoin=(id == Orm_Friend.c.id_f),
         backref = 'parents'
     )
+
+    # repay = db.relationship(
+    #     "OrmUser",
+    #     secondary=OrmRepay,
+    #     primaryjoin=(id == OrmRepay.c.id_debt),
+    #     secondaryjoin=(id == OrmRepay.c.id_repay),
+    #     backref='parent'
+    # )
+    debt = db.relationship("OrmRepay", foreign_keys="[OrmRepay.id_debt]")
+    repay = db.relationship("OrmRepay", foreign_keys="[OrmRepay.id_repay]")
 
     roles = db.relationship("OrmRole", secondary=user_have_roles, backref=db.backref('person', lazy='dynamic'))
 
@@ -99,7 +129,6 @@ class OrmItem(db.Model):
     user_deb = db.relationship("OrmDebt")
 
 
-
 class OrmEvent(db.Model):
     __tablename__ = 'orm_event'
     id = db.Column(db.Integer, primary_key=True)
@@ -109,8 +138,7 @@ class OrmEvent(db.Model):
 
     check = db.relationship("OrmCheck")
     user = db.relationship("OrmUser",secondary=OrmParticipant)
+    repay = db.relationship("OrmRepay")
 
-
-# class Orm
 
 db.create_all()
