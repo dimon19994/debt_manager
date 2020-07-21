@@ -1,10 +1,11 @@
 # TODO add username
 # TODO уникальность почты
 # TODO уникальночсть ника
+# TODO Ник только англ
 
 
 from flask import Flask, render_template, redirect, url_for, request
-from flask_security import SQLAlchemyUserDatastore, Security, login_required, current_user
+from flask_security import SQLAlchemyUserDatastore, Security, login_required, current_user, roles_accepted
 from flask_security.utils import hash_password
 from sqlalchemy import or_, and_
 from sqlalchemy.sql import func
@@ -43,7 +44,6 @@ def new():
 
 
 @app.route('/', methods=['GET', 'POST'])
-# @roles_accepted("User")
 def root():
     # return redirect(url_for('security.login'))
     return render_template('index.html')
@@ -141,6 +141,7 @@ def delete_person():
 
 @app.route('/friends', methods=['GET'])
 @login_required
+# @roles_accepted(str(current_user.id))
 def friends():
     all_0 = db.session.query(Orm_Friend.c.id_o.label("col_1"), Orm_Friend.c.id_f.label("col_2")).filter(
         Orm_Friend.c.id_o == current_user.id)
@@ -218,7 +219,8 @@ def add_fiend():
 @login_required
 def events():
     result = db.session.query(OrmEvent).join(OrmParticipant).filter(
-        and_(OrmEvent.id == OrmParticipant.c.event_id, OrmParticipant.c.person_di == current_user.id)).all()
+        and_(OrmEvent.id == OrmParticipant.c.event_id, OrmParticipant.c.person_di == current_user.id)).\
+        order_by(OrmEvent.date.desc()).all()
 
     return render_template('event.html', events=result)
 
@@ -258,7 +260,7 @@ def detail_event():
     categories = \
         db.session.query(OrmItem.category). \
             join(OrmCheck, and_(OrmItem.check_id == OrmCheck.id, OrmCheck.event_id == events_id)). \
-            group_by(OrmItem.category).all()
+            group_by(OrmItem.category).order_by(OrmItem.category).all()
 
     who_repay = db.session.query(func.sum(OrmRepay.sum), OrmRepay.id_debt.label('id')). \
             filter(and_(OrmRepay.id_event == events_id, OrmRepay.active)). \
@@ -403,7 +405,8 @@ def checks():
     result = db.session.query(OrmCheck.id, OrmCheck.description, OrmCheck.sum, OrmEvent.name, OrmEvent.date). \
         join(OrmEvent, OrmEvent.id == OrmCheck.event_id). \
         join(OrmParticipant, OrmParticipant.c.event_id == OrmEvent.id). \
-        join(OrmUser, OrmParticipant.c.person_di == OrmUser.id).filter(OrmUser.id == current_user.id).all()
+        join(OrmUser, OrmParticipant.c.person_di == OrmUser.id).filter(OrmUser.id == current_user.id).\
+        order_by(OrmEvent.date.desc(), OrmCheck.id).all()
 
     return render_template('check.html', checks=result)
 
@@ -427,7 +430,7 @@ def new_check():
             add = []
 
             new_check = OrmCheck(
-                sum=sum(form.check_sum.data),
+                sum=round(sum(form.check_sum.data),2),
                 description=form.check_description.data
             )
 
@@ -435,13 +438,15 @@ def new_check():
             event.check.append(new_check)
             add.append(event)
 
+            sale = form.check_sale.data/len(people)
+
             for i in range(len(form.check_pay.data)):
-                new_check.user_pay.append(OrmPay(person_id=form.check_pay.data[i], sum=form.check_sum.data[i]))
+                new_check.user_pay.append(OrmPay(person_id=form.check_pay.data[i], sum=round(form.check_sum.data[i], 2)))
 
             for i in range(len(form.check_item.data)):
                 new_check.item.append(OrmItem(
                     name=form.check_item.data[i],
-                    cost=form.item_cost.data[i],
+                    cost=round(form.item_cost.data[i]+sale, 2),
                     category=form.item_type.data[i]
                 ))
 
@@ -475,7 +480,7 @@ def new_debt(id):
                     deb = OrmDebt(
                         item_di=items[i].id,
                         person_id=j.id,
-                        sum=price
+                        sum=round(price, 2)
                     )
                     db.session.add(deb)
                     db.session.commit()
@@ -486,7 +491,7 @@ def new_debt(id):
                         deb = OrmDebt(
                             item_di=items[i].id,
                             person_id=people[j].id,
-                            sum=(items[i].cost/sum(count)*count[j])
+                            sum=round(items[i].cost/sum(count)*count[j], 2)
                         )
                         db.session.add(deb)
                         db.session.commit()

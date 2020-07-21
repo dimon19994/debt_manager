@@ -27,22 +27,22 @@
                 <tr>
                     <td> {{ people[i].name }} </td>
                     {% if repay_1["num"] < who_repay|length and people[i].id == who_repay[repay_1["num"]].id %}
-                        <td>{{ pay[i][0] + who_repay[repay_1["num"]][0] }}</td>
+                        <td>{{ pay[i][0] + who_repay[repay_1["num"]][0]|round(2) }}</td>
                     {% else %}
-                        <td>{{ pay[i][0] }}</td>
+                        <td>{{ pay[i][0]|round(2) }}</td>
                     {% endif %}
 
                     {% if repay_2["num"] < whom_repay|length and repay_1["num"] < who_repay|length and
                             people[i].id == whom_repay[repay_2["num"]].id and people[i].id == who_repay[repay_1["num"]].id %}
                         {% set debts = (all_debts[i][0] - pay[i][0]) +
-                                whom_repay[repay_2["num"]][0] - who_repay[repay_1["num"]][0]|round(2) %}
+                                whom_repay[repay_2["num"]][0] - who_repay[repay_1["num"]][0] %}
                         {% set _ = repay_2.update({'num':repay_2["num"] + 1}) %}
                         {% set _ = repay_1.update({'num':repay_1["num"] + 1}) %}
                     {% elif repay_2["num"] < whom_repay|length and people[i].id == whom_repay[repay_2["num"]].id %}
-                        {% set debts = (all_debts[i][0] - pay[i][0]) + whom_repay[repay_2["num"]][0]%}
+                        {% set debts = (all_debts[i][0] - pay[i][0]) + whom_repay[repay_2["num"]][0] %}
                         {% set _ = repay_2.update({'num':repay_2["num"] + 1}) %}
                     {% elif repay_1["num"] < who_repay|length and people[i].id == who_repay[repay_1["num"]].id %}
-                        {% set debts = (all_debts[i][0] - pay[i][0]) - who_repay[repay_1["num"]][0]|round(2) %}
+                        {% set debts = (all_debts[i][0] - pay[i][0]) - who_repay[repay_1["num"]][0] %}
                         {% set _ = repay_1.update({'num':repay_1["num"] + 1}) %}
                     {% else %}
                         {% set debts = (all_debts[i][0] - pay[i][0]) %}
@@ -64,7 +64,7 @@
 
                     {% for j in range(categories|length) %}
                         {% if counter["num"] < debt|length and debt[counter["num"]].person_id == people[i].id and debt[counter["num"]].category == categories[j].category %}
-                            <td>{{ debt[counter["num"]][0] }}</td>
+                            <td>{{ debt[counter["num"]][0]|round(2) }}</td>
                             {% set _ = counter.update({'num':counter["num"] + 1}) %}
                         {% else %}
                             <td>0</td>

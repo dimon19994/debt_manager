@@ -31,8 +31,9 @@ class CheckForm(Form):
 
     check_sale = FloatField("Надбавка/Скидка (+/-): ", [
         # validators.DataRequired("Please enter your username."),
-        validators.NumberRange(0.00, 100000, "Username should be from 0.00 to 100000 symbols")
-    ])
+        validators.NumberRange(-1, 100000, "Username should be from 0.00 to 100000 symbols")
+
+    ], default=0)
 
     item_type = FieldList(SelectField("Тип продукта: ", [validators.DataRequired("Please enter your birthday.")],
                                       choices=[('Еда', 'Еда'), ('Алкоголь', 'Алкоголь'),
