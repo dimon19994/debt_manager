@@ -4,7 +4,7 @@
 # TODO Ник только англ
 
 
-from flask import Flask, render_template, redirect, url_for, request
+from flask import Flask, render_template, redirect, url_for, request, jsonify
 from flask_security import SQLAlchemyUserDatastore, Security, login_required, current_user, roles_accepted
 from flask_security.utils import hash_password
 from sqlalchemy import or_, and_
@@ -54,7 +54,37 @@ def root():
 def person():
     result = db.session.query(OrmUser).filter(OrmUser.id == current_user.id).all()
 
-    return render_template('person.html', persons=result)
+    subquery1 = db.session.query(OrmEvent.id.label("id"), OrmEvent.name.label("name"), func.coalesce(func.avg(OrmPay.sum), 0).label("pay"),
+                func.coalesce(func.sum(OrmDebt.sum), 0).label("debt")).\
+                outerjoin(OrmCheck, OrmEvent.id == OrmCheck.event_id).\
+                outerjoin(OrmPay, and_(OrmPay.check_di == OrmCheck.id, OrmPay.person_id == current_user.id)).\
+                outerjoin(OrmItem, OrmCheck.id == OrmItem.check_id).\
+                outerjoin(OrmDebt, and_(OrmDebt.item_di == OrmItem.id, OrmDebt.person_id == current_user.id)).\
+                group_by(OrmCheck.id, OrmEvent.id).subquery()
+
+    subquery2 = db.session.query(subquery1.c.id.label("id"), subquery1.c.name.label("name"), func.sum(subquery1.c.pay).label("pay"),
+                func.sum(subquery1.c.debt).label("debt"), func.coalesce(func.avg(OrmRepay.sum), 0).label("repay")).\
+                outerjoin(OrmRepay, and_(subquery1.c.id == OrmRepay.id_event, OrmRepay.id_repay == current_user.id)).\
+                group_by(OrmRepay.id, subquery1.c.id, subquery1.c.name).subquery()
+
+    res = db.session.query(subquery2.c.id, subquery2.c.name.label("name"), (subquery2.c.debt + func.sum(subquery2.c.repay) -
+                subquery2.c.pay).label("count")).group_by(subquery2.c.id, subquery2.c.pay, subquery2.c.debt, subquery2.c.name).\
+                order_by(subquery2.c.id.desc()).all()
+
+    repay = db.session.query(OrmRepay.sum, OrmRepay.id, OrmEvent.name, OrmUser.name, OrmUser.surname).join(OrmUser, OrmUser.id == OrmRepay.id_debt).\
+                join(OrmEvent, OrmEvent.id == OrmRepay.id_event).\
+                filter(and_(OrmRepay.id_repay == current_user.id, OrmRepay.active == False)).all()
+
+    i_debt = []
+    me_debt = []
+
+    for i in res:
+        if i[2] > 1:
+            i_debt.append(i)
+        elif i[2] < -1:
+            me_debt.append(i)
+
+    return render_template('person.html', persons=result, i_debt=i_debt, me_debt=me_debt, repay=repay)
 
 
 @app.route('/new_person', methods=['GET', 'POST'])
@@ -267,14 +297,32 @@ def detail_event():
             group_by(OrmRepay.id_debt).\
             order_by(OrmRepay.id_debt).all()
 
-    whom_repay = db.session.query(func.sum(OrmRepay.sum), OrmRepay.id_repay.label('id')). \
-        filter(and_(OrmRepay.id_event == events_id, OrmRepay.active)). \
-        group_by(OrmRepay.id_repay). \
-        order_by(OrmRepay.id_repay).all()
+    whom_repay = \
+        db.session.query(func.sum(OrmRepay.sum), OrmRepay.id_repay.label('id')). \
+            filter(and_(OrmRepay.id_event == events_id, OrmRepay.active)). \
+            group_by(OrmRepay.id_repay). \
+            order_by(OrmRepay.id_repay).all()
+
+    repay = db.session.query(OrmRepay.sum, OrmRepay.id, OrmEvent.name, OrmUser.name, OrmUser.surname).\
+        join(OrmUser, OrmUser.id == OrmRepay.id_debt). \
+        join(OrmEvent, OrmEvent.id == OrmRepay.id_event). \
+        filter(and_(OrmRepay.id_repay == current_user.id, OrmRepay.active == False,
+                    OrmRepay.id_event == events_id)).all()
+
+    subquery1 = db.session.query(OrmRepay.id_repay.label("id"), OrmRepay.sum.label("sum"), OrmUser.name.label("name1"),
+                                 OrmUser.surname.label("surname1")).\
+                    join(OrmUser, OrmUser.id == OrmRepay.id_debt).\
+                    join(OrmEvent, OrmEvent.id == OrmRepay.id_event).\
+                    filter(and_(OrmRepay.active == True, OrmEvent.id == events_id)).subquery()
+
+    repay_all = db.session.query(subquery1.c.sum.label("sum"), OrmUser.name.label("name2"),
+                                 OrmUser.surname.label("surname2"), subquery1.c.name1.label("name1"),
+                                 subquery1.c.surname1.label("surname1")).join(OrmUser, OrmUser.id == subquery1.c.id).all()
 
     if len(categories) > 0:
         return render_template('event_table.html', people=participant_id, pay=pay_info, debt=categorical_debt,
-                               categories=categories, all_debts=all_debt, id=events_id, who_repay=who_repay, whom_repay=whom_repay)
+                               categories=categories, all_debts=all_debt, id=events_id, who_repay=who_repay,
+                               whom_repay=whom_repay, repay = repay, repay_all=repay_all)
     else:
         return render_template('event_table_none.html')
 
@@ -559,17 +607,44 @@ def new_repay():
                 id_debt=form.my_id.data,
                 id_repay=form.repay_id.data,
                 sum=form.repay_sum.data,
-                active=True
-                #TODO Поменять на False и добавить отображение
+                active=False
             )
 
             db.session.add(new_repay)
             db.session.commit()
 
-            return redirect(url_for('events'))
+            return redirect(url_for('detail_event', event_id=event_id))
 
 
     return render_template('repey_form.html', form=form, form_name="New repay", action="new_repay", id=event_id)
+
+
+@app.route('/except_repay', methods=['POST'])
+@login_required
+def except_repay():
+    repay_id = request.form['repay_id']
+
+    repay = db.session.query(OrmRepay).filter(OrmRepay.id == repay_id).one()
+
+    repay.active = True
+
+    db.session.add(repay)
+    db.session.commit()
+
+    return {"repay_id": repay_id, "href": "detail_event?event_id="+str(repay.id_event)}
+
+
+@app.route('/deny_repay', methods=['POST'])
+@login_required
+def deny_repay():
+    repay_id = request.form['repay_id']
+
+    repay = db.session.query(OrmRepay).filter(OrmRepay.id == repay_id).one()
+
+    db.session.delete(repay)
+    db.session.commit()
+
+    return jsonify(repay_id=repay_id, href="detail_event?event_id="+str(repay.id_event))
 
 
 if __name__ == "__main__":

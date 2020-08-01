@@ -2,6 +2,7 @@ $(document).ready(function () {
     $(".btn-primary:first").click(function () {
         var count = $(".form-group td:nth-child(2) input").length + 1;
         var a = Number(($(".form-group td input:eq("+(count-2)*2+")")[0].id).split("-")[1]);
+        var select = $("#item_type-0")[0].innerHTML;
 
         $(".form-group:eq("+count+")").before("" +
             "<div class=\"form-group\">\n" +
@@ -27,7 +28,7 @@ $(document).ready(function () {
             "                                    \n" +
             "                                </td>\n" +
             "                                <td>\n" +
-            "                                    <select class=\"form-control\" id=\"item_type-"+(a+1)+"\" name=\"item_type-"+(a+1)+"\" required=\"\"><option value=\"Еда\">Еда</option><option value=\"Алкоголь\">Алкоголь</option><option value=\"Квартира\">Квартира</option><option value=\"Хрень\">Хрень</option><option value=\"Билеты\">Билеты</option></select>\n" +
+            "                                    <select class=\"form-control\" id=\"item_type-"+(a+1)+"\" name=\"item_type-"+(a+1)+"\" required=\"\">"+select+"</select>\n" +
             "                                </td>\n" +
             "                            </tr>\n" +
             "                        </tbody></table>\n" +
@@ -77,7 +78,7 @@ $(document).ready(function () {
                 sum -= Number($(".form-group td .pay")[i].value)
             }
 
-            $(".form-group td .pay")[0].value = (parseInt((sum+Number($("#check_sale")[0].value)) * 100)) / 100;
+            $(".form-group td .pay")[0].value = (sum+Number($("#check_sale")[0].value)).toFixed(2);
         }
     });
 

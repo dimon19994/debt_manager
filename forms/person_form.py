@@ -15,7 +15,7 @@ class PersonForm(Form):
 
     person_username = StringField("Username: ", [
         validators.DataRequired("Please enter your username."),
-        validators.Length(5, 20, "Username should be from 3 to 20 symbols")
+        validators.Length(3, 20, "Username should be from 3 to 20 symbols")
     ])
 
     person_password = PasswordField("Password: ", [

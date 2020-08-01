@@ -6,12 +6,13 @@
 
 
 
-<div class="table-responsive">
-
-    <form action="add_fiend" method="POST">
-        <input type="text" name="username">
-        <button type="submit">Додати друга</button>
-    </form>
+<div class="table-responsive" >
+    <div >
+        <form class="form" action="add_fiend" method="POST">
+            <input class="form-control col-md-3" type="text" name="username">
+            <button type="button" class="btn btn-success">Додати друга</button>
+        </form>
+    </div>
 
     {% if friends|length > 0 %}
 

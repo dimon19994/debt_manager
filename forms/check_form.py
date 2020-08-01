@@ -11,7 +11,7 @@ class CheckForm(Form):
 
     check_description = StringField("Описание: ", [
         validators.DataRequired("Please enter your username."),
-        validators.Length(5, 200, "Username should be from 3 to 20 symbols")
+        validators.Length(3, 200, "Username should be from 3 to 20 symbols")
     ])
 
     check_sum = FieldList(FloatField("Сумма: ", [
@@ -21,7 +21,7 @@ class CheckForm(Form):
 
     check_item = FieldList(StringField("Продукт: ", [
         validators.DataRequired("Please enter your password."),
-        validators.Length(5, 100, "Password should be from 5 to 100 symbols")
+        validators.Length(3, 100, "Password should be from 5 to 100 symbols")
     ]), min_entries=1)
 
     item_cost = FieldList(FloatField("Цена продукта: ", [
@@ -36,9 +36,10 @@ class CheckForm(Form):
     ], default=0)
 
     item_type = FieldList(SelectField("Тип продукта: ", [validators.DataRequired("Please enter your birthday.")],
-                                      choices=[('Еда', 'Еда'), ('Алкоголь', 'Алкоголь'),
-                                               ('Квартира', 'Квартира'), ('Хрень', 'Хрень'),
-                                               ('Билеты', 'Билеты')]), min_entries=1)
+                                      choices=[('Алкоголь', 'Алкоголь'), ('Билеты', 'Билеты'),
+                                               ('Вода', 'Вода'), ('Еда', 'Еда'),
+                                               ('Квартира', 'Квартира'), ('Хрень', 'Хрень')]),
+                                                min_entries=1)
 
     check_pay = FieldList(SelectField("Плательщик: ", coerce=int), min_entries=1)
 
