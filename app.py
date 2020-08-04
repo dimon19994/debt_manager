@@ -277,32 +277,47 @@ def detail_event():
             group_by(OrmParticipant.c.person_di).order_by(OrmParticipant.c.person_di).all()
 
     categorical_debt = \
-        db.session.query(func.sum(OrmDebt.sum), OrmDebt.person_id, OrmItem.category). \
-            join(OrmItem, OrmDebt.item_di == OrmItem.id). \
-            join(OrmCheck, and_(OrmItem.check_id == OrmCheck.id, OrmCheck.event_id == events_id)). \
-            group_by(OrmDebt.person_id, OrmItem.category).order_by(OrmDebt.person_id, OrmItem.category).all()
+        db.session.query(func.coalesce(func.sum(OrmDebt.sum), 0), OrmParticipant.c.person_di, OrmItem.category).\
+            join(OrmEvent, OrmEvent.id == OrmParticipant.c.event_id).\
+            join(OrmCheck, OrmCheck.event_id == OrmEvent.id).\
+            join(OrmItem, OrmItem.check_id == OrmCheck.id).\
+            outerjoin(OrmDebt, and_(OrmDebt.item_di == OrmItem.id, OrmDebt.person_id == OrmParticipant.c.person_di)).\
+            filter(OrmParticipant.c.event_id == events_id).\
+            group_by(OrmParticipant.c.person_di, OrmItem.category).\
+            order_by(OrmParticipant.c.person_di, OrmItem.category).all()
 
     all_debt = \
-        db.session.query(func.sum(OrmDebt.sum), OrmDebt.person_id). \
-            join(OrmItem, OrmDebt.item_di == OrmItem.id). \
-            join(OrmCheck, and_(OrmItem.check_id == OrmCheck.id, OrmCheck.event_id == events_id)). \
-            group_by(OrmDebt.person_id).order_by(OrmDebt.person_id).all()
+        db.session.query(func.coalesce(func.sum(OrmDebt.sum), 0), OrmParticipant.c.person_di). \
+            join(OrmEvent, OrmEvent.id == OrmParticipant.c.event_id). \
+            join(OrmCheck, OrmCheck.event_id == OrmEvent.id). \
+            join(OrmItem, OrmItem.check_id == OrmCheck.id). \
+            outerjoin(OrmDebt, and_(OrmDebt.item_di == OrmItem.id, OrmDebt.person_id == OrmParticipant.c.person_di)). \
+            filter(OrmParticipant.c.event_id == events_id). \
+            group_by(OrmParticipant.c.person_di). \
+            order_by(OrmParticipant.c.person_di).all()
 
     categories = \
         db.session.query(OrmItem.category). \
             join(OrmCheck, and_(OrmItem.check_id == OrmCheck.id, OrmCheck.event_id == events_id)). \
             group_by(OrmItem.category).order_by(OrmItem.category).all()
 
-    who_repay = db.session.query(func.sum(OrmRepay.sum), OrmRepay.id_debt.label('id')). \
-            filter(and_(OrmRepay.id_event == events_id, OrmRepay.active)). \
-            group_by(OrmRepay.id_debt).\
-            order_by(OrmRepay.id_debt).all()
+    who_repay = \
+        db.session.query(func.coalesce(func.sum(OrmRepay.sum), 0), OrmParticipant.c.person_di).\
+            join(OrmEvent, OrmEvent.id == OrmParticipant.c.event_id).\
+            outerjoin(OrmRepay, and_(OrmRepay.id_event == OrmEvent.id, OrmRepay.id_debt == OrmParticipant.c.person_di,
+                                    OrmRepay.active == True)).\
+            filter(OrmEvent.id == events_id).\
+            group_by(OrmParticipant.c.person_di).\
+            order_by(OrmParticipant.c.person_di)
 
     whom_repay = \
-        db.session.query(func.sum(OrmRepay.sum), OrmRepay.id_repay.label('id')). \
-            filter(and_(OrmRepay.id_event == events_id, OrmRepay.active)). \
-            group_by(OrmRepay.id_repay). \
-            order_by(OrmRepay.id_repay).all()
+        db.session.query(func.coalesce(func.sum(OrmRepay.sum), 0), OrmParticipant.c.person_di). \
+            join(OrmEvent, OrmEvent.id == OrmParticipant.c.event_id). \
+            outerjoin(OrmRepay, and_(OrmRepay.id_event == OrmEvent.id, OrmRepay.id_repay == OrmParticipant.c.person_di,
+                                     OrmRepay.active == True)). \
+            filter(OrmEvent.id == events_id). \
+            group_by(OrmParticipant.c.person_di). \
+            order_by(OrmParticipant.c.person_di)
 
     repay = db.session.query(OrmRepay.sum, OrmRepay.id, OrmEvent.name, OrmUser.name, OrmUser.surname).\
         join(OrmUser, OrmUser.id == OrmRepay.id_debt). \
@@ -647,6 +662,36 @@ def deny_repay():
 
     return jsonify(repay_id=repay_id, href="detail_event?event_id="+str(repay.id_event))
 
+
+@app.route('/detail_item', methods=['GET', 'POST'])
+@login_required
+def detail_item():
+    event_id = request.args.get('event_id')
+    category = request.args.get('category')
+    person_id = request.args.get('person_id')
+
+    query = \
+        db.session.query(OrmCheck.description, OrmItem.name, OrmItem.category,
+                         OrmDebt.sum, OrmUser.name.label("pname"), OrmUser.surname).\
+            join(OrmDebt, OrmDebt.item_di == OrmItem.id).\
+            join(OrmCheck, OrmCheck.id == OrmItem.check_id).\
+            join(OrmEvent, OrmEvent.id == OrmCheck.event_id).\
+            join(OrmParticipant, and_(OrmParticipant.c.event_id == OrmEvent.id,
+                                      OrmParticipant.c.person_di == OrmDebt.person_id)).\
+            join(OrmUser, OrmParticipant.c.person_di == OrmUser.id)
+
+    if category and person_id:
+        details = query.filter(and_(OrmItem.category == category, OrmCheck.event_id == event_id,
+                          OrmDebt.person_id == person_id)).all()
+        flag = None
+    elif category:
+        details = query.filter(and_(OrmItem.category == category, OrmCheck.event_id == event_id)).all()
+        flag = "category"
+    elif person_id:
+        details = query.filter(and_(OrmCheck.event_id == event_id, OrmDebt.person_id == person_id)).all()
+        flag = "person"
+
+    return render_template('item_table.html', details=details, event_id=event_id, flag=flag)
 
 
 if __name__ == "__main__":
