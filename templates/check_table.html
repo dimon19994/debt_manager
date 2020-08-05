@@ -50,8 +50,10 @@
         </thead>
         <tbody>
             {% for i in pay %}
-                <td scope="col">{{ i.name+" "+i.surname }}</td>
-                <td scope="col">{{ i.sum }}</td>
+                <tr>
+                    <td scope="col">{{ i.name+" "+i.surname }}</td>
+                    <td scope="col">{{ i.sum }}</td>
+                </tr>
             {% endfor %}
         </tbody>
     </table>
