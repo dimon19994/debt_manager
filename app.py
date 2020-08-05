@@ -594,7 +594,11 @@ def detail_check():
         join(OrmCheck, OrmEvent.id == OrmCheck.event_id). \
         filter(OrmCheck.id == check_id).order_by(OrmUser.id).all()
 
-    return render_template('check_table.html', items=items, debt=debt, people=people)
+    pay = db.session.query(OrmPay.sum, OrmUser.name, OrmUser.surname).\
+        join(OrmUser, OrmUser.id == OrmPay.person_id).\
+        filter(OrmPay.check_di == check_id).all()
+
+    return render_template('check_table.html', items=items, debt=debt, people=people, pay=pay)
 
 
 @app.route('/new_repay', methods=['GET', 'POST'])
