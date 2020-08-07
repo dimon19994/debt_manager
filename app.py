@@ -401,8 +401,15 @@ def edit_event():
         form.event_name.data = event.name
         form.event_place.data = event.place
         form.event_date.data = event.date
+        
+        participant = db.session.query(OrmParticipant.c.person_di).\
+            join(OrmEvent, OrmEvent.id == OrmParticipant.c.event_id).\
+            filter(OrmEvent.id == event_id).all()
 
-        return render_template('event_form.html', form=form, form_name="Edit event", action="edit_event")
+        participant = list(map(lambda x : x[0], participant))
+        participant.remove(1)
+
+        return render_template('event_form.html', form=form, form_name="Edit event", action="edit_event", participant=participant)
 
 
     else:
