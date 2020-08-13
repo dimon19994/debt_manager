@@ -25,7 +25,7 @@
                         {{ form.person_email.label }}
                         {{ form.person_email(class_="form-control") }}
 
-                        {% if form.person_email.errors%}
+                        {% if form.person_email.errors %}
                             <div class="alert alert-danger" role="alert">
                                 {% for message in form.person_email.errors %}
                                      <div>{{ message }}</div>

@@ -13,4 +13,6 @@ class DebtForm(Form):
 
     debt_all = FieldList(BooleanField(false_values=None), min_entries=0)
 
+    item_id = FieldList(HiddenField(), min_entries=0)
+
     submit = SubmitField("Save")
