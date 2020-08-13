@@ -581,7 +581,7 @@ def new_debt(id):
                                    people=people, items=items, id=id)
         else:
             for i in range(len(items)):
-                if str(i) in str(form.debt_all):
+                if '"debt_all-'+str(i)+'"' in str(form.debt_all):
                     price = items[i].cost / len(people)
                     for j in people:
                         deb = OrmDebt(
@@ -817,8 +817,9 @@ def edit_check():
 
             for i in range(len(form.check_pay.data)):
                 if i < len(pay):
-                    pay[i].sum = form.check_sum.data[i]
-                    pay[i].person_id = form.check_pay.data[i]
+                    pay_u = db.session.query(OrmPay).filter(and_(OrmPay.check_di == pay[i].check_di, OrmPay.person_id == pay[i].person_id))
+                    pay_u.sum = form.check_sum.data[i]
+                    pay_u.person_id = form.check_pay.data[i]
                 else:
                     checks.user_pay.append(OrmPay(
                         person_id=form.check_pay.data[i],
@@ -914,7 +915,7 @@ def edit_debt(id):
                                    people=people, items=items, id=id)
         else:
             for i in range(len(items)):
-                if str(i) in str(form.debt_all):
+                if '"debt_all-'+str(i)+'"' in str(form.debt_all):
                     price = items[i].cost / len(people)
                     for j in range(len(people)):
                         deb = db.session.query(OrmDebt).filter(
