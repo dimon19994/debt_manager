@@ -6,20 +6,24 @@
 
     <!--https://www.codeply.com/go/nhbdi2FkJm-->
 
-<div class="container">
-    <div class="row">
-        <div class="col-md-6 mx-auto">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-7 mx-auto">
 
-            <!-- form card login -->
-            <div class="card rounded-0">
+                <!-- form card login -->
+                <div class="card rounded-0">
 
-                <div class="card-header">
-                    <h3 class="mb-0">{{ form_name }}</h3>
-                </div>
-                <div class="card-body">
+                    <div class="card-header">
+                        <h3 class="mb-0">{{ form_name }}</h3>
+                    </div>
+                    <div class="card-body">
 
-                    <form class="form" action="/{{ action }}?event_id={{ id }}" method=post
-                          enctype="multipart/form-data">
+                        {% if action == "new_check" %}
+                            <form class="form" action="/{{ action }}?event_id={{ id }}" method=post
+                                  enctype="multipart/form-data">
+                        {% else %}
+                            <form class="form" action="/{{ action }}" method=post enctype="multipart/form-data">
+                        {% endif %}
                         {{ form.hidden_tag() }}
 
                         <div class="form-group">
@@ -51,6 +55,7 @@
                                     </tr>
                                     <tr>
                                         <td>
+                                            {{ form.item_id[i] }}
                                             {{ form.check_item[i](class_="form-control") }}
                                             {% if form.check_item[i].errors %}
                                                 <div class="alert alert-danger" role="alert">
@@ -79,6 +84,11 @@
                                                     {% endfor %}
                                                 </div>
                                             {% endif %}
+                                        </td>
+                                        <td>
+                                            <button type="button" class="btn btn-danger item_delete" id="item_delete-0">
+                                                Удалить
+                                            </button>
                                         </td>
                                     </tr>
                                 </table>
@@ -114,26 +124,53 @@
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td>
-                                            {{ form.check_sum[i](class_="form-control pay", readonly="readonly") }}
-                                            {% if form.check_item[i].errors %}
-                                                <div class="alert alert-danger" role="alert">
-                                                    {% for message in form.check_item[i].errors %}
-                                                        <div>{{ message }}</div>
-                                                    {% endfor %}
-                                                </div>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            {{ form.check_pay[i](class_="form-control") }}
-                                            {% if form.check_pay[i].errors %}
-                                                <div class="alert alert-danger" role="alert">
-                                                    {% for message in form.check_pay[i].errors %}
-                                                        <div>{{ message }}</div>
-                                                    {% endfor %}
-                                                </div>
-                                            {% endif %}
-                                        </td>
+                                        {% if i == 0 %}
+                                            <td>
+                                                {{ form.check_sum[i](class_="form-control pay", readonly="readonly") }}
+                                                {% if form.check_item[i].errors %}
+                                                    <div class="alert alert-danger" role="alert">
+                                                        {% for message in form.check_item[i].errors %}
+                                                            <div>{{ message }}</div>
+                                                        {% endfor %}
+                                                    </div>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {{ form.check_pay[i](class_="form-control") }}
+                                                {% if form.check_pay[i].errors %}
+                                                    <div class="alert alert-danger" role="alert">
+                                                        {% for message in form.check_pay[i].errors %}
+                                                            <div>{{ message }}</div>
+                                                        {% endfor %}
+                                                    </div>
+                                                {% endif %}
+                                            </td>
+                                        {% else %}
+                                            <td>
+                                                {{ form.check_sum[i](class_="form-control pay") }}
+                                                {% if form.check_item[i].errors %}
+                                                    <div class="alert alert-danger" role="alert">
+                                                        {% for message in form.check_item[i].errors %}
+                                                            <div>{{ message }}</div>
+                                                        {% endfor %}
+                                                    </div>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {{ form.check_pay[i](class_="form-control") }}
+                                                {% if form.check_pay[i].errors %}
+                                                    <div class="alert alert-danger" role="alert">
+                                                        {% for message in form.check_pay[i].errors %}
+                                                            <div>{{ message }}</div>
+                                                        {% endfor %}
+                                                    </div>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                               <button type="button" class="btn btn-danger pay_delete" id="pay_delete-{{ i }}">Удалить</button>
+                                           </td>
+                                        {% endif %}
+
                                     </tr>
                                 </table>
                             </div>
@@ -145,15 +182,15 @@
 
                         {{ form.submit(class_="btn btn-success") }}
 
-                    </form>
+                        </form>
+                    </div>
+                    <!--/card-block-->
                 </div>
-                <!--/card-block-->
-            </div>
-            <!-- /form card login -->
+                <!-- /form card login -->
 
+            </div>
         </div>
     </div>
-</div>
     <script src="{{ url_for('static', filename='js/check_form.js') }}"></script>
 
 {% endblock %}
