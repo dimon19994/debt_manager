@@ -332,16 +332,16 @@ def detail_event():
         filter(and_(OrmRepay.id_repay == current_user.id, OrmRepay.active == False,
                     OrmRepay.id_event == events_id)).all()
 
-    subquery1 = db.session.query(OrmRepay.id_repay.label("id"), OrmRepay.sum.label("sum"), OrmUser.name.label("name1"),
+    subquery1 = db.session.query(OrmRepay.id_debt.label("debt"), OrmRepay.id_repay.label("id"), OrmRepay.sum.label("sum"), OrmUser.name.label("name1"),
                                  OrmUser.surname.label("surname1")). \
         join(OrmUser, OrmUser.id == OrmRepay.id_debt). \
         join(OrmEvent, OrmEvent.id == OrmRepay.id_event). \
         filter(and_(OrmRepay.active == True, OrmEvent.id == events_id)).subquery()
 
     repay_all = db.session.query(subquery1.c.sum.label("sum"), OrmUser.name.label("name2"),
-                                 OrmUser.surname.label("surname2"), subquery1.c.name1.label("name1"),
-                                 subquery1.c.surname1.label("surname1")).join(OrmUser,
-                                                                              OrmUser.id == subquery1.c.id).all()
+                OrmUser.surname.label("surname2"), subquery1.c.name1.label("name1"),
+                subquery1.c.surname1.label("surname1")).join(OrmUser,
+                OrmUser.id == subquery1.c.id).order_by(subquery1.c.debt).all()
 
     if len(categories) > 0:
         return render_template('event_table.html', people=participant_id, pay=pay_info, debt=categorical_debt,
@@ -461,22 +461,41 @@ def edit_event():
 @login_required
 def delete_event():
     event_id = request.form['event_id']
+
+    repay = db.session.query(OrmRepay).filter(OrmRepay.id_event == event_id).all()
+    for i in repay:
+        db.session.delete(i)
+
+    debt = db.session.query(OrmDebt).\
+        join(OrmItem, OrmItem.id == OrmDebt.item_di).\
+        join(OrmCheck, OrmCheck.id == OrmItem.check_id).\
+        filter(OrmCheck.event_id == event_id).all()
+    for i in debt:
+        db.session.delete(i)
+
+    item = db.session.query(OrmItem). \
+        join(OrmCheck, OrmCheck.id == OrmItem.check_id). \
+        filter(OrmCheck.event_id == event_id).all()
+    for i in item:
+        db.session.delete(i)
+
+    pay = db.session.query(OrmPay). \
+        join(OrmCheck, OrmCheck.id == OrmPay.check_di). \
+        filter(OrmCheck.event_id == event_id).all()
+    for i in pay:
+        db.session.delete(i)
+
+    check = db.session.query(OrmCheck). \
+        filter(OrmCheck.event_id == event_id).all()
+    for i in check:
+        db.session.delete(i)
+
     event = db.session.query(OrmEvent).filter(OrmEvent.id == event_id).one()
-
-    participates = db.session.query(OrmUser). \
-        join(OrmParticipant, OrmParticipant.c.person_di == OrmUser.id). \
-        join(OrmEvent, OrmParticipant.c.event_id == OrmEvent.id). \
-        filter(OrmEvent.id == event_id).all()
-
-    for i in participates:
-        i.event.remove(event)
-        db.session.add(i)
-    db.session.commit()
-
     db.session.delete(event)
+
     db.session.commit()
 
-    return redirect(url_for('security.login'))
+    return redirect(url_for('events'))
 
 
 @app.route('/checks', methods=['GET'])
@@ -948,6 +967,35 @@ def edit_debt(id):
 
             db.session.commit()
         return redirect(url_for('detail_check', check_id=id))
+
+
+@app.route('/delete_check', methods=['POST'])
+@login_required
+def delete_check():
+    check_id = request.form['check_id']
+
+    pay = db.session.query(OrmPay). \
+        filter(OrmItem.check_id == check_id).all()
+    for i in pay:
+        db.session.delete(i)
+
+    debt = db.session.query(OrmDebt).\
+        join(OrmItem, OrmItem.id == OrmDebt.item_di).\
+        filter(OrmItem.check_id == check_id).all()
+    for i in debt:
+        db.session.delete(i)
+
+    item = db.session.query(OrmItem). \
+        filter(OrmItem.check_id == check_id).all()
+    for i in item:
+        db.session.delete(i)
+
+    check = db.session.query(OrmCheck).filter(OrmCheck.id == check_id).one()
+    db.session.delete(check)
+
+    db.session.commit()
+
+    return redirect(url_for('checks'))
 
 
 if __name__ == "__main__":
