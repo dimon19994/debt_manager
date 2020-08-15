@@ -37,12 +37,25 @@ security = Security(app, user_datastore)
 @app.route('/new')
 # @roles_accepted("Admin")
 def new():
-    role_user = OrmRole(name="User")
-    role_admin = OrmRole(name="Admin")
-    db.session.add_all([role_user, role_admin])
+    # role_user = OrmRole(name="User")
+    # role_admin = OrmRole(name="Admin")
+    # db.session.add_all([role_user, role_admin])
+    # db.session.commit()
+    #
+    # return redirect(url_for('security.login'))
+
+    items_id = db.session.query(OrmCheck.id).filter(OrmCheck.event_id == 20).all()
+
+    for i in items_id:
+        pay = OrmPay(
+            check_di = i,
+            person_id = 1,
+            sum = 0
+        )
+        db.session.add(pay)
     db.session.commit()
 
-    return redirect(url_for('security.login'))
+    return redirect(url_for('checks'))
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -836,9 +849,10 @@ def edit_check():
 
             for i in range(len(form.check_pay.data)):
                 if i < len(pay):
-                    pay_u = db.session.query(OrmPay).filter(and_(OrmPay.check_di == pay[i].check_di, OrmPay.person_id == pay[i].person_id))
-                    pay_u.sum = form.check_sum.data[i]
-                    pay_u.person_id = form.check_pay.data[i]
+                    # pay_u = db.session.query(OrmPay).filter(and_(OrmPay.check_di == pay[i].check_di, OrmPay.person_id == pay[i].person_id))
+                    pay[i].sum = form.check_sum.data[i]
+                    pay[i].person_id = form.check_pay.data[i]
+                    db.session.add(pay[i])
                 else:
                     checks.user_pay.append(OrmPay(
                         person_id=form.check_pay.data[i],
