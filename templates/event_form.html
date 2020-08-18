@@ -90,6 +90,18 @@
     <script>
         $(document).ready(function() {
             $('#event_friends').multiselect();
+
+            var participant = {{ participant }};
+            var all_people = $('ul.multiselect-container li a label input')
+            for(let i=1; i<=all_people.length+1; i++){
+                if (participant.indexOf(i) != -1){
+                    $('ul.multiselect-container li:nth-child('+(Number(i-1))+') a label input').click()
+                }
+            }
+
         });
+
+
+
     </script>
 {% endblock %}
