@@ -296,23 +296,30 @@ def detail_event():
             filter(OrmCheck.event_id == events_id). \
             group_by(OrmParticipant.c.person_di).order_by(OrmParticipant.c.person_di).all()
 
+    sub_debt = db.session.query(func.avg(OrmItem.cost).label("costs"), func.sum(OrmDebt.sum).label("sums"),
+                                OrmItem.id.label("id")). \
+        join(OrmItem, OrmItem.id == OrmDebt.item_di). \
+        join(OrmCheck, OrmCheck.id == OrmItem.check_id).\
+        filter(OrmCheck.event_id == events_id). \
+        group_by(OrmItem.id).subquery()
+
     categorical_debt = \
-        db.session.query(func.coalesce(func.sum(OrmDebt.sum), 0), OrmParticipant.c.person_di, OrmItem.category). \
+        db.session.query(func.sum(sub_debt.c.costs / sub_debt.c.sums * func.coalesce(OrmDebt.sum, 0)), OrmParticipant.c.person_di, OrmItem.category). \
             join(OrmEvent, OrmEvent.id == OrmParticipant.c.event_id). \
             join(OrmCheck, OrmCheck.event_id == OrmEvent.id). \
             join(OrmItem, OrmItem.check_id == OrmCheck.id). \
             outerjoin(OrmDebt, and_(OrmDebt.item_di == OrmItem.id, OrmDebt.person_id == OrmParticipant.c.person_di)). \
-            filter(OrmParticipant.c.event_id == events_id). \
+            filter(and_(OrmParticipant.c.event_id == events_id, sub_debt.c.id == OrmItem.id)). \
             group_by(OrmParticipant.c.person_di, OrmItem.category). \
             order_by(OrmParticipant.c.person_di, OrmItem.category).all()
 
     all_debt = \
-        db.session.query(func.coalesce(func.sum(OrmDebt.sum), 0), OrmParticipant.c.person_di). \
+        db.session.query(func.sum(sub_debt.c.costs / sub_debt.c.sums * func.coalesce(OrmDebt.sum, 0)), OrmParticipant.c.person_di). \
             join(OrmEvent, OrmEvent.id == OrmParticipant.c.event_id). \
             join(OrmCheck, OrmCheck.event_id == OrmEvent.id). \
             join(OrmItem, OrmItem.check_id == OrmCheck.id). \
             outerjoin(OrmDebt, and_(OrmDebt.item_di == OrmItem.id, OrmDebt.person_id == OrmParticipant.c.person_di)). \
-            filter(OrmParticipant.c.event_id == events_id). \
+            filter(and_(OrmParticipant.c.event_id == events_id, sub_debt.c.id == OrmItem.id)). \
             group_by(OrmParticipant.c.person_di). \
             order_by(OrmParticipant.c.person_di).all()
 
@@ -378,7 +385,7 @@ def new_event():
 
     if request.method == 'POST':
         if not form.validate():
-            return render_template('event_form.html', form=form, form_name="New event", action="new_event")
+            return render_template('event_form.html', form=form, form_name="New event", action="new_event", participant=None)
         else:
             new_event = OrmEvent(
                 name=form.event_name.data,
@@ -397,7 +404,7 @@ def new_event():
             db.session.commit()
             return redirect(url_for('events'))
 
-    return render_template('event_form.html', form=form, form_name="New event", action="new_event")
+    return render_template('event_form.html', form=form, form_name="New event", action="new_event", participant=None)
 
 
 @app.route('/edit_event', methods=['GET', 'POST'])
@@ -619,7 +626,8 @@ def new_debt(id):
                         deb = OrmDebt(
                             item_di=items[i].id,
                             person_id=j.id,
-                            sum=round(price, 2)
+                            # sum=round(price, 2)
+                            sum=1
                         )
                         db.session.add(deb)
                         db.session.commit()
@@ -630,7 +638,8 @@ def new_debt(id):
                             deb = OrmDebt(
                                 item_di=items[i].id,
                                 person_id=people[j].id,
-                                sum=round(items[i].cost / sum(count) * count[j], 2)
+                                # sum=round(items[i].cost / sum(count) * count[j], 2)
+                                sum=count[j]
                             )
                             db.session.add(deb)
                             db.session.commit()
@@ -654,10 +663,18 @@ def detail_check():
         join(OrmCheck, OrmCheck.id == OrmItem.check_id). \
         filter(OrmCheck.id == check_id).order_by(OrmItem.id).all()
 
-    debt = db.session.query(OrmDebt). \
-        join(OrmItem, OrmItem.id == OrmDebt.item_di). \
-        filter(OrmItem.check_id == check_id). \
-        order_by(OrmDebt.item_di, OrmDebt.person_id).all()
+    sub_debt = db.session.query(func.avg(OrmItem.cost).label("costs"), func.sum(OrmDebt.sum).label("sums"), OrmItem.id.label("id")).\
+        join(OrmItem, OrmItem.id == OrmDebt.item_di).\
+        filter(OrmItem.check_id == check_id).\
+        group_by(OrmItem.id).subquery()
+
+    debt = db.session.query(sub_debt.c.costs/sub_debt.c.sums*func.coalesce(OrmDebt.sum, 0), sub_debt.c.id, OrmParticipant.c.person_di). \
+        join(OrmEvent, OrmEvent.id == OrmParticipant.c.event_id). \
+        join(OrmCheck, OrmCheck.event_id == OrmEvent.id). \
+        join(OrmItem, OrmItem.check_id == OrmCheck.id). \
+        outerjoin(OrmDebt, and_(OrmDebt.item_di == OrmItem.id, OrmDebt.person_id == OrmParticipant.c.person_di)). \
+        filter(and_(OrmItem.check_id == check_id, sub_debt.c.id == OrmItem.id)). \
+        order_by(sub_debt.c.id, OrmParticipant.c.person_di).all()
 
     people = db.session.query(OrmUser). \
         join(OrmParticipant, OrmParticipant.c.person_di == OrmUser.id). \
@@ -744,9 +761,16 @@ def detail_item():
     category = request.args.get('category')
     person_id = request.args.get('person_id')
 
+    sub_debt = db.session.query(func.avg(OrmItem.cost).label("costs"), func.sum(OrmDebt.sum).label("sums"),
+                                OrmItem.id.label("id")). \
+        join(OrmItem, OrmItem.id == OrmDebt.item_di). \
+        join(OrmCheck, OrmCheck.id == OrmItem.check_id). \
+        filter(OrmCheck.event_id == event_id). \
+        group_by(OrmItem.id).subquery()
+
     query = \
         db.session.query(OrmCheck.description, OrmItem.name, OrmItem.category,
-                         OrmDebt.sum, OrmUser.name.label("pname"), OrmUser.surname). \
+                         (sub_debt.c.costs / sub_debt.c.sums * func.coalesce(OrmDebt.sum, 0)).label("sum"), OrmUser.name.label("pname"), OrmUser.surname). \
             join(OrmDebt, OrmDebt.item_di == OrmItem.id). \
             join(OrmCheck, OrmCheck.id == OrmItem.check_id). \
             join(OrmEvent, OrmEvent.id == OrmCheck.event_id). \
@@ -756,13 +780,13 @@ def detail_item():
 
     if category and person_id:
         details = query.filter(and_(OrmItem.category == category, OrmCheck.event_id == event_id,
-                                    OrmDebt.person_id == person_id)).all()
+                                    OrmDebt.person_id == person_id, sub_debt.c.id == OrmItem.id)).all()
         flag = None
     elif category:
-        details = query.filter(and_(OrmItem.category == category, OrmCheck.event_id == event_id)).all()
+        details = query.filter(and_(OrmItem.category == category, OrmCheck.event_id == event_id, sub_debt.c.id == OrmItem.id)).all()
         flag = "category"
     elif person_id:
-        details = query.filter(and_(OrmCheck.event_id == event_id, OrmDebt.person_id == person_id)).all()
+        details = query.filter(and_(OrmCheck.event_id == event_id, OrmDebt.person_id == person_id, sub_debt.c.id == OrmItem.id)).all()
         flag = "person"
 
     return render_template('item_table.html', details=details, event_id=event_id, flag=flag)
@@ -816,8 +840,6 @@ def edit_check():
         if not form.validate():
             return render_template('check_form.html', form=form, form_name="Edit check", action="edit_check")
         else:
-            add = []
-
             checks = db.session.query(OrmCheck).filter(OrmCheck.id == form.check_id.data).one()
 
             checks.sum = round(sum(form.check_sum.data), 2),
@@ -849,10 +871,10 @@ def edit_check():
 
             for i in range(len(form.check_pay.data)):
                 if i < len(pay):
-                    # pay_u = db.session.query(OrmPay).filter(and_(OrmPay.check_di == pay[i].check_di, OrmPay.person_id == pay[i].person_id))
-                    pay[i].sum = form.check_sum.data[i]
-                    pay[i].person_id = form.check_pay.data[i]
-                    db.session.add(pay[i])
+                    pay_u = db.session.query(OrmPay).filter(and_(OrmPay.check_di == pay[i].check_di, OrmPay.person_id == pay[i].person_id)).one()
+                    pay_u.sum = form.check_sum.data[i]
+                    # pay_u.person_id = form.check_pay.data[i]
+                    db.session.add(pay_u)
                 else:
                     checks.user_pay.append(OrmPay(
                         person_id=form.check_pay.data[i],
@@ -899,9 +921,7 @@ def edit_debt(id):
                     if all_debt[i * len(people) + j][0] == 0:
                         form.debt_count.append_entry(0)
                     else:
-                        form.debt_count.append_entry(int(round(items[i].cost / all_debt[i * len(people) + j][0] / len(
-                            list(filter(lambda x: x[0] != 0,
-                                        all_debt[i * len(people):i * len(people) + len(people)]))))))
+                        form.debt_count.append_entry(int(all_debt[i * len(people) + j][0]))
 
                 form.debt_all.append_entry()
                 form.item_id.append_entry(items[i].id)
@@ -918,8 +938,8 @@ def edit_debt(id):
         form.debt_errors = []
         for i in range(len(items)):
             if sum(list(map(lambda x: x.data,
-                            form.debt_count[len(people) * i:len(people) * i + len(people)]))) == 0 and str(
-                            i) not in str(form.debt_all):
+                            form.debt_count[len(people) * i:len(people) * i + len(people)]))) == 0 and '"debt_all-'+str(i)+'"'\
+                    not in str(form.debt_all):
                 form.debt_errors.append("ошибка ввода")
                 flag = True
             else:
@@ -933,10 +953,7 @@ def edit_debt(id):
                         if all_debt[i * len(people) + j][0] == 0:
                             form.debt_count.append_entry(0)
                         else:
-                            form.debt_count.append_entry(
-                                int(round(items[i].cost / all_debt[i * len(people) + j][0] / len(
-                                    list(filter(lambda x: x[0] != 0,
-                                                all_debt[i * len(people):i * len(people) + len(people)]))))))
+                            form.debt_count.append_entry(int(all_debt[i * len(people) + j][0] ))
 
                     form.debt_all.append_entry()
                 else:
@@ -949,7 +966,6 @@ def edit_debt(id):
         else:
             for i in range(len(items)):
                 if '"debt_all-'+str(i)+'"' in str(form.debt_all):
-                    price = items[i].cost / len(people)
                     for j in range(len(people)):
                         deb = db.session.query(OrmDebt).filter(
                             and_(OrmDebt.item_di == items[i].id, OrmDebt.person_id == people[j].id)).one_or_none()
@@ -957,23 +973,23 @@ def edit_debt(id):
                             new_deb = OrmDebt(
                                 item_di=items[i].id,
                                 person_id=people[j].id,
-                                sum=round(price, 2)
+                                sum=1
                             )
                             db.session.add(new_deb)
                         else:
-                            deb.sum = round(price, 2)
+                            deb.sum = 1
                 else:
                     count = form.debt_count.data[len(people) * i:len(people) * i + len(people)]
                     for j in range(len(people)):
                         deb = db.session.query(OrmDebt).filter(
                             and_(OrmDebt.item_di == items[i].id, OrmDebt.person_id == people[j].id)).one_or_none()
                         if form.debt_count[i * len(people) + j].data > 0 and deb != None:
-                            deb.sum = round(items[i].cost / sum(count) * count[j], 2)
+                            deb.sum = count[j]
                         elif form.debt_count[i * len(people) + j].data > 0 and deb == None:
                             new_deb = OrmDebt(
                                 item_di=items[i].id,
                                 person_id=people[j].id,
-                                sum=round(items[i].cost / sum(count) * count[j], 2)
+                                sum=count[j]
                             )
                             db.session.add(new_deb)
                         elif form.debt_count[i * len(people) + j].data == 0 and deb != None:
@@ -989,7 +1005,7 @@ def delete_check():
     check_id = request.form['check_id']
 
     pay = db.session.query(OrmPay). \
-        filter(OrmItem.check_id == check_id).all()
+        filter(OrmPay.check_di == check_id).all()
     for i in pay:
         db.session.delete(i)
 

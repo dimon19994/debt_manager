@@ -19,19 +19,13 @@
             </tr>
         </thead>
         <tbody>
-            {% set counter = {"num": 0} %}
 
             {% for j in range(items|length) %}
                 <tr >
                     <td> {{items[j].name}} </td>
                     <td> {{items[j].cost}} </td>
                     {% for i in range(people|length) %}
-                        {% if counter["num"] < debt|length and debt[counter["num"]].person_id == people[i].id and debt[counter["num"]].item_di == items[j].id %}
-                            <td>{{ debt[counter["num"]].sum }}</td>
-                            {% set _ = counter.update({'num':counter["num"] + 1}) %}
-                        {% else %}
-                            <td>0</td>
-                        {% endif %}
+                        <td>{{ debt[j*people|length+i][0]|round(2)}}</td>
                     {% endfor %}
                     <td>{{ items[j].category }}</td>
 
