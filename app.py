@@ -18,8 +18,9 @@ from forms.repay_form import RepayForm
 
 app = Flask(__name__)
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:01200120@localhost/debt_manager'
-app.config[
-    'SQLALCHEMY_DATABASE_URI'] = "postgres://vwgdncthqvrfxu:4e44983fca331d02098c0208b79b45579ec69a15c7085765e6fae7e994d864c8@ec2-34-233-226-84.compute-1.amazonaws.com:5432/d4b55fh4te2e3h"
+app.config['SQLALCHEMY_DATABASE_URI'] = "postgres://vwgdncthqvrfxu:" \
+                                        "4e44983fca331d02098c0208b79b45579ec69a15c7085765e6fae7e994d864c8@" \
+                                        "ec2-34-233-226-84.compute-1.amazonaws.com:5432/d4b55fh4te2e3h"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 app.secret_key = 'key'
@@ -48,7 +49,7 @@ def new():
 
     for i in items_id:
         pay = OrmPay(
-            check_di = i,
+            check_id = i,
             person_id = 1,
             sum = 0
         )
@@ -73,9 +74,9 @@ def person():
                                  func.coalesce(func.avg(OrmPay.sum), 0).label("pay"),
                                  func.coalesce(func.sum(OrmDebt.sum), 0).label("debt")). \
         outerjoin(OrmCheck, OrmEvent.id == OrmCheck.event_id). \
-        outerjoin(OrmPay, and_(OrmPay.check_di == OrmCheck.id, OrmPay.person_id == current_user.id)). \
+        outerjoin(OrmPay, and_(OrmPay.check_id == OrmCheck.id, OrmPay.person_id == current_user.id)). \
         outerjoin(OrmItem, OrmCheck.id == OrmItem.check_id). \
-        outerjoin(OrmDebt, and_(OrmDebt.item_di == OrmItem.id, OrmDebt.person_id == current_user.id)). \
+        outerjoin(OrmDebt, and_(OrmDebt.item_id == OrmItem.id, OrmDebt.person_id == current_user.id)). \
         group_by(OrmCheck.id, OrmEvent.id).subquery()
 
     subquery2 = db.session.query(subquery1.c.id.label("id"), subquery1.c.name.label("name"),
@@ -270,7 +271,7 @@ def add_fiend():
 @login_required
 def events():
     result = db.session.query(OrmEvent).join(OrmParticipant).filter(
-        and_(OrmEvent.id == OrmParticipant.c.event_id, OrmParticipant.c.person_di == current_user.id)). \
+        and_(OrmEvent.id == OrmParticipant.c.event_id, OrmParticipant.c.person_id == current_user.id)). \
         order_by(OrmEvent.date.desc()).all()
 
     return render_template('event.html', events=result)
@@ -283,45 +284,45 @@ def detail_event():
 
     participant_id = \
         db.session.query(OrmUser.id, OrmUser.name). \
-            join(OrmParticipant, OrmParticipant.c.person_di == OrmUser.id). \
+            join(OrmParticipant, OrmParticipant.c.person_id == OrmUser.id). \
             join(OrmEvent, OrmEvent.id == OrmParticipant.c.event_id). \
             filter(OrmEvent.id == events_id). \
             order_by(OrmUser.id).all()
 
     pay_info = \
-        db.session.query(func.coalesce(func.sum(OrmPay.sum), 0), OrmParticipant.c.person_di). \
+        db.session.query(func.coalesce(func.sum(OrmPay.sum), 0), OrmParticipant.c.person_id). \
             join(OrmEvent, OrmEvent.id == OrmParticipant.c.event_id). \
             join(OrmCheck, OrmEvent.id == OrmCheck.event_id). \
-            outerjoin(OrmPay, and_(OrmCheck.id == OrmPay.check_di, OrmParticipant.c.person_di == OrmPay.person_id)). \
+            outerjoin(OrmPay, and_(OrmCheck.id == OrmPay.check_id, OrmParticipant.c.person_id == OrmPay.person_id)). \
             filter(OrmCheck.event_id == events_id). \
-            group_by(OrmParticipant.c.person_di).order_by(OrmParticipant.c.person_di).all()
+            group_by(OrmParticipant.c.person_id).order_by(OrmParticipant.c.person_id).all()
 
     sub_debt = db.session.query(func.avg(OrmItem.cost).label("costs"), func.sum(OrmDebt.sum).label("sums"),
                                 OrmItem.id.label("id")). \
-        join(OrmItem, OrmItem.id == OrmDebt.item_di). \
+        join(OrmItem, OrmItem.id == OrmDebt.item_id). \
         join(OrmCheck, OrmCheck.id == OrmItem.check_id).\
         filter(OrmCheck.event_id == events_id). \
         group_by(OrmItem.id).subquery()
 
     categorical_debt = \
-        db.session.query(func.sum(sub_debt.c.costs / sub_debt.c.sums * func.coalesce(OrmDebt.sum, 0)), OrmParticipant.c.person_di, OrmItem.category). \
+        db.session.query(func.sum(sub_debt.c.costs / sub_debt.c.sums * func.coalesce(OrmDebt.sum, 0)), OrmParticipant.c.person_id, OrmItem.category). \
             join(OrmEvent, OrmEvent.id == OrmParticipant.c.event_id). \
             join(OrmCheck, OrmCheck.event_id == OrmEvent.id). \
             join(OrmItem, OrmItem.check_id == OrmCheck.id). \
-            outerjoin(OrmDebt, and_(OrmDebt.item_di == OrmItem.id, OrmDebt.person_id == OrmParticipant.c.person_di)). \
+            outerjoin(OrmDebt, and_(OrmDebt.item_id == OrmItem.id, OrmDebt.person_id == OrmParticipant.c.person_id)). \
             filter(and_(OrmParticipant.c.event_id == events_id, sub_debt.c.id == OrmItem.id)). \
-            group_by(OrmParticipant.c.person_di, OrmItem.category). \
-            order_by(OrmParticipant.c.person_di, OrmItem.category).all()
+            group_by(OrmParticipant.c.person_id, OrmItem.category). \
+            order_by(OrmParticipant.c.person_id, OrmItem.category).all()
 
     all_debt = \
-        db.session.query(func.sum(sub_debt.c.costs / sub_debt.c.sums * func.coalesce(OrmDebt.sum, 0)), OrmParticipant.c.person_di). \
+        db.session.query(func.sum(sub_debt.c.costs / sub_debt.c.sums * func.coalesce(OrmDebt.sum, 0)), OrmParticipant.c.person_id). \
             join(OrmEvent, OrmEvent.id == OrmParticipant.c.event_id). \
             join(OrmCheck, OrmCheck.event_id == OrmEvent.id). \
             join(OrmItem, OrmItem.check_id == OrmCheck.id). \
-            outerjoin(OrmDebt, and_(OrmDebt.item_di == OrmItem.id, OrmDebt.person_id == OrmParticipant.c.person_di)). \
+            outerjoin(OrmDebt, and_(OrmDebt.item_id == OrmItem.id, OrmDebt.person_id == OrmParticipant.c.person_id)). \
             filter(and_(OrmParticipant.c.event_id == events_id, sub_debt.c.id == OrmItem.id)). \
-            group_by(OrmParticipant.c.person_di). \
-            order_by(OrmParticipant.c.person_di).all()
+            group_by(OrmParticipant.c.person_id). \
+            order_by(OrmParticipant.c.person_id).all()
 
     categories = \
         db.session.query(OrmItem.category). \
@@ -329,22 +330,22 @@ def detail_event():
             group_by(OrmItem.category).order_by(OrmItem.category).all()
 
     who_repay = \
-        db.session.query(func.coalesce(func.sum(OrmRepay.sum), 0), OrmParticipant.c.person_di). \
+        db.session.query(func.coalesce(func.sum(OrmRepay.sum), 0), OrmParticipant.c.person_id). \
             join(OrmEvent, OrmEvent.id == OrmParticipant.c.event_id). \
-            outerjoin(OrmRepay, and_(OrmRepay.id_event == OrmEvent.id, OrmRepay.id_debt == OrmParticipant.c.person_di,
+            outerjoin(OrmRepay, and_(OrmRepay.id_event == OrmEvent.id, OrmRepay.id_debt == OrmParticipant.c.person_id,
                                      OrmRepay.active == True)). \
             filter(OrmEvent.id == events_id). \
-            group_by(OrmParticipant.c.person_di). \
-            order_by(OrmParticipant.c.person_di)
+            group_by(OrmParticipant.c.person_id). \
+            order_by(OrmParticipant.c.person_id)
 
     whom_repay = \
-        db.session.query(func.coalesce(func.sum(OrmRepay.sum), 0), OrmParticipant.c.person_di). \
+        db.session.query(func.coalesce(func.sum(OrmRepay.sum), 0), OrmParticipant.c.person_id). \
             join(OrmEvent, OrmEvent.id == OrmParticipant.c.event_id). \
-            outerjoin(OrmRepay, and_(OrmRepay.id_event == OrmEvent.id, OrmRepay.id_repay == OrmParticipant.c.person_di,
+            outerjoin(OrmRepay, and_(OrmRepay.id_event == OrmEvent.id, OrmRepay.id_repay == OrmParticipant.c.person_id,
                                      OrmRepay.active == True)). \
             filter(OrmEvent.id == events_id). \
-            group_by(OrmParticipant.c.person_di). \
-            order_by(OrmParticipant.c.person_di)
+            group_by(OrmParticipant.c.person_id). \
+            order_by(OrmParticipant.c.person_id)
 
     repay = db.session.query(OrmRepay.sum, OrmRepay.id, OrmEvent.name, OrmUser.name, OrmUser.surname). \
         join(OrmUser, OrmUser.id == OrmRepay.id_debt). \
@@ -430,7 +431,7 @@ def edit_event():
         form.event_place.data = event.place
         form.event_date.data = event.date
 
-        participant = db.session.query(OrmParticipant.c.person_di). \
+        participant = db.session.query(OrmParticipant.c.person_id). \
             join(OrmEvent, OrmEvent.id == OrmParticipant.c.event_id). \
             filter(OrmEvent.id == event_id).all()
 
@@ -453,7 +454,7 @@ def edit_event():
             event.date = form.event_date.data
 
             participates = db.session.query(OrmUser). \
-                join(OrmParticipant, OrmParticipant.c.person_di == OrmUser.id). \
+                join(OrmParticipant, OrmParticipant.c.person_id == OrmUser.id). \
                 join(OrmEvent, OrmParticipant.c.event_id == OrmEvent.id). \
                 filter(OrmEvent.id == form.event_id.data)
 
@@ -466,6 +467,7 @@ def edit_event():
 
             for i in to_del:
                 i.event.remove(event)
+                
                 db.session.add(i)
 
             for i in to_add:
@@ -487,7 +489,7 @@ def delete_event():
         db.session.delete(i)
 
     debt = db.session.query(OrmDebt).\
-        join(OrmItem, OrmItem.id == OrmDebt.item_di).\
+        join(OrmItem, OrmItem.id == OrmDebt.item_id).\
         join(OrmCheck, OrmCheck.id == OrmItem.check_id).\
         filter(OrmCheck.event_id == event_id).all()
     for i in debt:
@@ -500,7 +502,7 @@ def delete_event():
         db.session.delete(i)
 
     pay = db.session.query(OrmPay). \
-        join(OrmCheck, OrmCheck.id == OrmPay.check_di). \
+        join(OrmCheck, OrmCheck.id == OrmPay.check_id). \
         filter(OrmCheck.event_id == event_id).all()
     for i in pay:
         db.session.delete(i)
@@ -524,7 +526,7 @@ def checks():
     result = db.session.query(OrmCheck.id, OrmCheck.description, OrmCheck.sum, OrmEvent.name, OrmEvent.date). \
         join(OrmEvent, OrmEvent.id == OrmCheck.event_id). \
         join(OrmParticipant, OrmParticipant.c.event_id == OrmEvent.id). \
-        join(OrmUser, OrmParticipant.c.person_di == OrmUser.id).filter(OrmUser.id == current_user.id). \
+        join(OrmUser, OrmParticipant.c.person_id == OrmUser.id).filter(OrmUser.id == current_user.id). \
         order_by(OrmEvent.date.desc(), OrmCheck.id).all()
 
     return render_template('check.html', checks=result)
@@ -543,7 +545,7 @@ def new_check():
 
     event_id = request.args.get('event_id')
     people = db.session.query(OrmUser.id, OrmUser.name, OrmUser.surname). \
-        join(OrmParticipant, OrmParticipant.c.person_di == OrmUser.id). \
+        join(OrmParticipant, OrmParticipant.c.person_id == OrmUser.id). \
         join(OrmEvent, OrmEvent.id == OrmParticipant.c.event_id).filter(OrmEvent.id == event_id). \
         order_by(OrmUser.id).all()
     for i in range(len(form.check_pay)):
@@ -593,7 +595,7 @@ def new_debt(id):
         filter(OrmCheck.id == id).order_by(OrmItem.id).all()
 
     people = db.session.query(OrmUser.id, OrmUser.name, OrmUser.surname). \
-        join(OrmParticipant, OrmParticipant.c.person_di == OrmUser.id). \
+        join(OrmParticipant, OrmParticipant.c.person_id == OrmUser.id). \
         join(OrmEvent, OrmParticipant.c.event_id == OrmEvent.id). \
         join(OrmCheck, OrmEvent.id == OrmCheck.event_id). \
         filter(OrmCheck.id == id).order_by(OrmUser.id).all()
@@ -624,7 +626,7 @@ def new_debt(id):
                     price = items[i].cost / len(people)
                     for j in people:
                         deb = OrmDebt(
-                            item_di=items[i].id,
+                            item_id=items[i].id,
                             person_id=j.id,
                             # sum=round(price, 2)
                             sum=1
@@ -636,7 +638,7 @@ def new_debt(id):
                     for j in range(len(people)):
                         if count[j] > 0:
                             deb = OrmDebt(
-                                item_di=items[i].id,
+                                item_id=items[i].id,
                                 person_id=people[j].id,
                                 # sum=round(items[i].cost / sum(count) * count[j], 2)
                                 sum=count[j]
@@ -664,27 +666,27 @@ def detail_check():
         filter(OrmCheck.id == check_id).order_by(OrmItem.id).all()
 
     sub_debt = db.session.query(func.avg(OrmItem.cost).label("costs"), func.sum(OrmDebt.sum).label("sums"), OrmItem.id.label("id")).\
-        join(OrmItem, OrmItem.id == OrmDebt.item_di).\
+        join(OrmItem, OrmItem.id == OrmDebt.item_id).\
         filter(OrmItem.check_id == check_id).\
         group_by(OrmItem.id).subquery()
 
-    debt = db.session.query(sub_debt.c.costs/sub_debt.c.sums*func.coalesce(OrmDebt.sum, 0), sub_debt.c.id, OrmParticipant.c.person_di). \
+    debt = db.session.query(sub_debt.c.costs/sub_debt.c.sums*func.coalesce(OrmDebt.sum, 0), sub_debt.c.id, OrmParticipant.c.person_id). \
         join(OrmEvent, OrmEvent.id == OrmParticipant.c.event_id). \
         join(OrmCheck, OrmCheck.event_id == OrmEvent.id). \
         join(OrmItem, OrmItem.check_id == OrmCheck.id). \
-        outerjoin(OrmDebt, and_(OrmDebt.item_di == OrmItem.id, OrmDebt.person_id == OrmParticipant.c.person_di)). \
+        outerjoin(OrmDebt, and_(OrmDebt.item_id == OrmItem.id, OrmDebt.person_id == OrmParticipant.c.person_id)). \
         filter(and_(OrmItem.check_id == check_id, sub_debt.c.id == OrmItem.id)). \
-        order_by(sub_debt.c.id, OrmParticipant.c.person_di).all()
+        order_by(sub_debt.c.id, OrmParticipant.c.person_id).all()
 
     people = db.session.query(OrmUser). \
-        join(OrmParticipant, OrmParticipant.c.person_di == OrmUser.id). \
+        join(OrmParticipant, OrmParticipant.c.person_id == OrmUser.id). \
         join(OrmEvent, OrmParticipant.c.event_id == OrmEvent.id). \
         join(OrmCheck, OrmEvent.id == OrmCheck.event_id). \
         filter(OrmCheck.id == check_id).order_by(OrmUser.id).all()
 
     pay = db.session.query(OrmPay.sum, OrmUser.name, OrmUser.surname). \
         join(OrmUser, OrmUser.id == OrmPay.person_id). \
-        filter(OrmPay.check_di == check_id).all()
+        filter(OrmPay.check_id == check_id).all()
 
     return render_template('check_table.html', items=items, debt=debt, people=people, pay=pay)
 
@@ -695,7 +697,7 @@ def new_repay():
 
     event_id = request.args.get('event_id')
     people = db.session.query(OrmUser.id, OrmUser.name, OrmUser.surname). \
-        join(OrmParticipant, OrmParticipant.c.person_di == OrmUser.id). \
+        join(OrmParticipant, OrmParticipant.c.person_id == OrmUser.id). \
         join(OrmEvent, OrmEvent.id == OrmParticipant.c.event_id).filter(OrmEvent.id == event_id)
     me = db.session.query(OrmUser.id, OrmUser.name, OrmUser.surname). \
         filter(OrmUser.id == current_user.id)
@@ -763,7 +765,7 @@ def detail_item():
 
     sub_debt = db.session.query(func.avg(OrmItem.cost).label("costs"), func.sum(OrmDebt.sum).label("sums"),
                                 OrmItem.id.label("id")). \
-        join(OrmItem, OrmItem.id == OrmDebt.item_di). \
+        join(OrmItem, OrmItem.id == OrmDebt.item_id). \
         join(OrmCheck, OrmCheck.id == OrmItem.check_id). \
         filter(OrmCheck.event_id == event_id). \
         group_by(OrmItem.id).subquery()
@@ -771,12 +773,12 @@ def detail_item():
     query = \
         db.session.query(OrmCheck.description, OrmItem.name, OrmItem.category,
                          (sub_debt.c.costs / sub_debt.c.sums * func.coalesce(OrmDebt.sum, 0)).label("sum"), OrmUser.name.label("pname"), OrmUser.surname). \
-            join(OrmDebt, OrmDebt.item_di == OrmItem.id). \
+            join(OrmDebt, OrmDebt.item_id == OrmItem.id). \
             join(OrmCheck, OrmCheck.id == OrmItem.check_id). \
             join(OrmEvent, OrmEvent.id == OrmCheck.event_id). \
             join(OrmParticipant, and_(OrmParticipant.c.event_id == OrmEvent.id,
-                                      OrmParticipant.c.person_di == OrmDebt.person_id)). \
-            join(OrmUser, OrmParticipant.c.person_di == OrmUser.id)
+                                      OrmParticipant.c.person_id == OrmDebt.person_id)). \
+            join(OrmUser, OrmParticipant.c.person_id == OrmUser.id)
 
     if category and person_id:
         details = query.filter(and_(OrmItem.category == category, OrmCheck.event_id == event_id,
@@ -803,12 +805,12 @@ def edit_check():
 
         people_pay = db.session.query(OrmUser.id, OrmUser.name, OrmUser.surname, OrmPay.sum). \
             join(OrmPay, OrmPay.person_id == OrmUser.id). \
-            filter(OrmPay.check_di == check_id).order_by(OrmUser.id).all()
+            filter(OrmPay.check_id == check_id).order_by(OrmUser.id).all()
 
         items = db.session.query(OrmItem).filter(OrmItem.check_id == check_id).order_by(OrmItem.id).all()
 
         people = db.session.query(OrmUser.id, OrmUser.name, OrmUser.surname). \
-            join(OrmParticipant, OrmParticipant.c.person_di == OrmUser.id). \
+            join(OrmParticipant, OrmParticipant.c.person_id == OrmUser.id). \
             join(OrmEvent, OrmEvent.id == OrmParticipant.c.event_id). \
             join(OrmCheck, OrmCheck.event_id == OrmEvent.id).filter(OrmCheck.id == check_id). \
             order_by(OrmUser.id).order_by(OrmUser.id).all()
@@ -829,7 +831,7 @@ def edit_check():
         return render_template('check_form.html', form=form, form_name="Edit check", action="edit_check")
     else:
         people = db.session.query(OrmUser.id, OrmUser.name, OrmUser.surname). \
-            join(OrmParticipant, OrmParticipant.c.person_di == OrmUser.id). \
+            join(OrmParticipant, OrmParticipant.c.person_id == OrmUser.id). \
             join(OrmEvent, OrmEvent.id == OrmParticipant.c.event_id). \
             join(OrmCheck, OrmCheck.event_id == OrmEvent.id).filter(OrmCheck.id == form.check_id.data). \
             order_by(OrmUser.id).all()
@@ -845,7 +847,7 @@ def edit_check():
             checks.sum = round(sum(form.check_sum.data), 2),
             checks.description = form.check_description.data
 
-            pay = db.session.query(OrmPay).filter(OrmPay.check_di == form.check_id.data).all()
+            pay = db.session.query(OrmPay).filter(OrmPay.check_id == form.check_id.data).all()
 
             items = db.session.query(OrmItem).filter(OrmItem.check_id == form.check_id.data).all()
 
@@ -864,14 +866,14 @@ def edit_check():
                     item.category = form.item_type.data[i]
             for i in items:
                 if str(i.id) not in form.item_id.data:
-                    debts = db.session.query(OrmDebt).filter(OrmDebt.item_di == i.id).all()
+                    debts = db.session.query(OrmDebt).filter(OrmDebt.item_id == i.id).all()
                     for j in debts:
                         db.session.delete(j)
                     db.session.delete(i)
 
             for i in range(len(form.check_pay.data)):
                 if i < len(pay):
-                    pay_u = db.session.query(OrmPay).filter(and_(OrmPay.check_di == pay[i].check_di, OrmPay.person_id == pay[i].person_id)).one()
+                    pay_u = db.session.query(OrmPay).filter(and_(OrmPay.check_id == pay[i].check_id, OrmPay.person_id == pay[i].person_id)).one()
                     pay_u.sum = form.check_sum.data[i]
                     # pay_u.person_id = form.check_pay.data[i]
                     db.session.add(pay_u)
@@ -894,11 +896,11 @@ def edit_debt(id):
     form = DebtForm()
 
     all_debt = db.session.query(func.coalesce(OrmDebt.sum, 0), OrmUser.id). \
-        join(OrmParticipant, OrmParticipant.c.person_di == OrmUser.id). \
+        join(OrmParticipant, OrmParticipant.c.person_id == OrmUser.id). \
         join(OrmEvent, OrmEvent.id == OrmParticipant.c.event_id). \
         join(OrmCheck, OrmCheck.event_id == OrmEvent.id). \
         join(OrmItem, OrmItem.check_id == OrmCheck.id). \
-        outerjoin(OrmDebt, and_(OrmDebt.item_di == OrmItem.id, OrmDebt.person_id == OrmParticipant.c.person_di)). \
+        outerjoin(OrmDebt, and_(OrmDebt.item_id == OrmItem.id, OrmDebt.person_id == OrmParticipant.c.person_id)). \
         filter(OrmCheck.id == id). \
         order_by(OrmItem.id, OrmUser.id).all()
 
@@ -907,7 +909,7 @@ def edit_debt(id):
         filter(OrmCheck.id == id).order_by(OrmItem.id).all()
 
     people = db.session.query(OrmUser.id, OrmUser.name, OrmUser.surname). \
-        join(OrmParticipant, OrmParticipant.c.person_di == OrmUser.id). \
+        join(OrmParticipant, OrmParticipant.c.person_id == OrmUser.id). \
         join(OrmEvent, OrmParticipant.c.event_id == OrmEvent.id). \
         join(OrmCheck, OrmEvent.id == OrmCheck.event_id). \
         filter(OrmCheck.id == id).order_by(OrmUser.id).all()
@@ -948,7 +950,7 @@ def edit_debt(id):
             for i in range(len(items)):
                 if len(list(
                         filter(lambda x: x[0] != 0, all_debt[i * len(people):i * len(people) + len(people)]))) != len(
-                    people):
+                        people):
                     for j in range(len(people)):
                         if all_debt[i * len(people) + j][0] == 0:
                             form.debt_count.append_entry(0)
@@ -968,10 +970,10 @@ def edit_debt(id):
                 if '"debt_all-'+str(i)+'"' in str(form.debt_all):
                     for j in range(len(people)):
                         deb = db.session.query(OrmDebt).filter(
-                            and_(OrmDebt.item_di == items[i].id, OrmDebt.person_id == people[j].id)).one_or_none()
+                            and_(OrmDebt.item_id == items[i].id, OrmDebt.person_id == people[j].id)).one_or_none()
                         if deb == None:
                             new_deb = OrmDebt(
-                                item_di=items[i].id,
+                                item_id=items[i].id,
                                 person_id=people[j].id,
                                 sum=1
                             )
@@ -982,12 +984,12 @@ def edit_debt(id):
                     count = form.debt_count.data[len(people) * i:len(people) * i + len(people)]
                     for j in range(len(people)):
                         deb = db.session.query(OrmDebt).filter(
-                            and_(OrmDebt.item_di == items[i].id, OrmDebt.person_id == people[j].id)).one_or_none()
+                            and_(OrmDebt.item_id == items[i].id, OrmDebt.person_id == people[j].id)).one_or_none()
                         if form.debt_count[i * len(people) + j].data > 0 and deb != None:
                             deb.sum = count[j]
                         elif form.debt_count[i * len(people) + j].data > 0 and deb == None:
                             new_deb = OrmDebt(
-                                item_di=items[i].id,
+                                item_id=items[i].id,
                                 person_id=people[j].id,
                                 sum=count[j]
                             )
@@ -1005,12 +1007,12 @@ def delete_check():
     check_id = request.form['check_id']
 
     pay = db.session.query(OrmPay). \
-        filter(OrmPay.check_di == check_id).all()
+        filter(OrmPay.check_id == check_id).all()
     for i in pay:
         db.session.delete(i)
 
     debt = db.session.query(OrmDebt).\
-        join(OrmItem, OrmItem.id == OrmDebt.item_di).\
+        join(OrmItem, OrmItem.id == OrmDebt.item_id).\
         filter(OrmItem.check_id == check_id).all()
     for i in debt:
         db.session.delete(i)

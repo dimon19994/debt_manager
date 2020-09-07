@@ -18,25 +18,25 @@ Orm_Friend = db.Table('orm_friend',
 
 # class OrmParticipant(db.Model):
 #     __tablename__ = 'orm_participant'
-#     person_di = db.Column(db.Integer(), db.ForeignKey('orm_user.id'), primary_key=True)
+#     person_id = db.Column(db.Integer(), db.ForeignKey('orm_user.id'), primary_key=True)
 #     event_id = db.Column(db.Integer(), db.ForeignKey('orm_event.id'), primary_key=True)
 
 OrmParticipant = db.Table('orm_participant',
-    db.Column('person_di', db.Integer(), db.ForeignKey('orm_user.id'), primary_key=True),
+    db.Column('person_id', db.Integer(), db.ForeignKey('orm_user.id'), primary_key=True),
     db.Column('event_id', db.Integer(), db.ForeignKey('orm_event.id'), primary_key=True)
 )
 
 
 class OrmPay(db.Model):
     __tablename__ = 'orm_pay'
-    check_di = db.Column(db.Integer(), db.ForeignKey('orm_check.id'), primary_key=True)
+    check_id = db.Column(db.Integer(), db.ForeignKey('orm_check.id'), primary_key=True)
     person_id = db.Column(db.Integer(), db.ForeignKey('orm_user.id'), primary_key=True)
     sum = db.Column(db.Float(), nullable=False)
 
 
 class OrmDebt(db.Model):
     __tablename__ = 'orm_debt'
-    item_di = db.Column(db.Integer(), db.ForeignKey('orm_item.id'), primary_key=True)
+    item_id = db.Column(db.Integer(), db.ForeignKey('orm_item.id'), primary_key=True)
     person_id = db.Column(db.Integer(), db.ForeignKey('orm_user.id'), primary_key=True)
     sum = db.Column(db.Float(), nullable=False)
 
