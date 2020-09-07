@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="6c091b65-a93e-4559-9643-ddfae3c93bff" name="Default Changelist" comment="Merge branch 'master' of https://github.com/dimon19994/debt_manager&#10;&#10;# Conflicts:&#10;#&#9;.idea/workspace.xml">
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app.py" beforeDir="false" afterPath="$PROJECT_DIR$/app.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/check_table.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/check_table.html" afterDir="false" />
+ge beforePath="$PROJECT_DIR$/templates/check_table.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/check_table.html" afterDir="false" />
+    <list default="true" id="6c091b65-a93e-4559-9643-ddfae3c93bff" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -16,54 +15,36 @@
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/app.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-325">
-              <caret line="482" selection-start-line="482" selection-end-line="482" />
+
+            </state>
+          </provider>
+        </entry>
+      </file>
+
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/templates/check_table.html">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="168">
-              <caret line="27" column="65" selection-start-line="27" selection-start-column="65" selection-end-line="27" selection-end-column="65" />
+
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/templates/item_table.html">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="144">
-              <caret line="33" selection-start-line="33" selection-end-line="33" />
+
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/templates/index.html">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="269">
-              <caret line="55" selection-start-line="55" selection-end-line="55" />
+
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/templates/check_form.html">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-2780">
-              <caret line="10" column="28" selection-start-line="10" selection-start-column="20" selection-end-line="10" selection-end-column="28" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/templates/event_form.html">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="161">
-              <caret line="91" column="44" lean-forward="true" selection-start-line="91" selection-start-column="44" selection-end-line="91" selection-end-column="44" />
+
             </state>
           </provider>
         </entry>
@@ -81,9 +62,7 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>detail_e</find>
-      <find>хрень</find>
-      <find>хрен</find>
+
       <find>Подро</find>
       <find>outer</find>
       <find>Vali</find>
@@ -95,22 +74,7 @@
       <find>detail_event</find>
       <find>delete</find>
       <find>/delete</find>
-      <find>new_eve</find>
-      <find>new_che</find>
-      <find>all_1</find>
-      <find>deb</find>
-      <find>detai</find>
-      <find>subq</find>
-      <find>detail_eve</find>
-      <find>detail_che</find>
-      <find>delete_c</find>
-      <find>deta</find>
-      <find>debt =</find>
-      <find>debt</find>
-      <find>che</find>
-      <find>detail_c</find>
-      <find>sub_debt.c.costs ==</find>
-      <find>sub_debt</find>
+
     </findStrings>
     <replaceStrings>
       <replace>OrmParticipant.c</replace>
@@ -122,11 +86,7 @@
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
-    <option name="RECENT_BRANCH_BY_REPOSITORY">
-      <map>
-        <entry key="$PROJECT_DIR$" value="master" />
-      </map>
-    </option>
+
   </component>
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
@@ -161,7 +121,6 @@
         <option value="$PROJECT_DIR$/static/js/person.js" />
         <option value="$PROJECT_DIR$/Procfile" />
         <option value="$PROJECT_DIR$/runtime.txt" />
-        <option value="$PROJECT_DIR$/templates/check_table.html" />
         <option value="$PROJECT_DIR$/app.py" />
       </list>
     </option>
@@ -417,11 +376,6 @@
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="268395000" />
-  </component>
-  <component name="ToolWindowManager">
-    <frame x="-7" y="-7" width="1550" height="838" extended-state="6" />
-    <editor active="true" />
     <layout>
       <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.2124665" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
@@ -429,15 +383,10 @@
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" />
       <window_info anchor="bottom" id="Run" order="2" weight="0.32956153" />
-      <window_info active="true" anchor="bottom" id="Debug" order="3" visible="true" weight="0.31966054" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="6" />
       <window_info anchor="bottom" id="Docker" order="7" show_stripe_button="false" />
-      <window_info anchor="bottom" id="Version Control" order="8" weight="0.32956153" />
-      <window_info anchor="bottom" id="Database Changes" order="9" />
-      <window_info anchor="bottom" id="Event Log" order="10" side_tool="true" />
-      <window_info anchor="bottom" id="Terminal" order="11" weight="0.24186705" />
       <window_info anchor="bottom" id="Python Console" order="12" />
       <window_info anchor="bottom" id="Messages" order="13" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
@@ -450,38 +399,10 @@
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="1" />
   </component>
-  <component name="Vcs.Log.Tabs.Properties">
-    <option name="TAB_STATES">
-      <map>
-        <entry key="MAIN">
-          <value>
-            <State>
-              <option name="RECENTLY_FILTERED_USER_GROUPS">
-                <collection />
-              </option>
-              <option name="RECENTLY_FILTERED_BRANCH_GROUPS">
-                <collection />
-              </option>
-              <option name="COLUMN_ORDER">
-                <list>
-                  <option value="0" />
-                  <option value="1" />
-                  <option value="2" />
-                  <option value="3" />
-                </list>
-              </option>
-            </State>
-          </value>
-        </entry>
-      </map>
-    </option>
-  </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="first" />
     <MESSAGE value="second" />
     <MESSAGE value="diagrams" />
-    <MESSAGE value="new" />
-    <option name="LAST_COMMIT_MESSAGE" value="new" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -503,18 +424,10 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/app.py</url>
-          <line>542</line>
           <option name="timeStamp" value="119" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/app.py</url>
-          <line>200</line>
-          <option name="timeStamp" value="172" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/app.py</url>
-          <line>947</line>
-          <option name="timeStamp" value="204" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="javascript">
           <url>file://$PROJECT_DIR$/static/js/person.js</url>
@@ -534,79 +447,35 @@
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/debt_manager$model.coverage" NAME="model Coverage Results" MODIFIED="1594114973188" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/dao" />
     <SUITE FILE_PATH="coverage/debt_manager$debt_manager.coverage" NAME="debt_manager Coverage Results" MODIFIED="1596315607338" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/debt_manager$Flask__app_py_.coverage" NAME="Flask (app.py) Coverage Results" MODIFIED="1597774318715" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
   <component name="debuggerHistoryManager">
     <expressions id="evaluateCodeFragment">
       <expression>
-        <expression-string>db.session.query(sub_debt.c.costs/sub_debt.c.sums*func.coalesce(OrmDebt.sum, 0), sub_debt.c.id, OrmParticipant.c.person_di). \
-        join(OrmEvent, OrmEvent.id == OrmParticipant.c.event_id). \
-        join(OrmCheck, OrmCheck.event_id == OrmEvent.id). \
-        join(OrmItem, OrmItem.check_id == OrmCheck.id). \
-        outerjoin(OrmDebt, and_(OrmDebt.item_di == OrmItem.id, OrmDebt.person_id == OrmParticipant.c.person_di)). \
-        filter(and_(OrmItem.check_id == check_id, sub_debt.c.costs == OrmItem.cost)). \
-        order_by(sub_debt.c.id, OrmParticipant.c.person_di)</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
       </expression>
       <expression>
-        <expression-string>db.session.query(sub_debt.c.costs/sub_debt.c.sums*func.coalesce(OrmDebt.sum, 0), sub_debt.c.id, OrmParticipant.c.person_di). \
-        join(OrmEvent, OrmEvent.id == OrmParticipant.c.event_id). \
-        join(OrmCheck, OrmCheck.event_id == OrmEvent.id). \
-        join(OrmItem, OrmItem.check_id == OrmCheck.id). \
-        outerjoin(OrmDebt, and_(OrmDebt.item_di == OrmItem.id, OrmDebt.person_id == OrmParticipant.c.person_di)). \
-        filter(and_(OrmItem.check_id == check_id, sub_debt.c.costs == OrmItem.cost)). \
-        order_by(sub_debt.c.id, OrmParticipant.c.person_di</expression-string>
+
         <language-id>Python</language-id>
         <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
       </expression>
       <expression>
-        <expression-string>debt</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
       </expression>
       <expression>
-        <expression-string>sum(list(map(lambda x: x.data,
-                            form.debt_count[len(people) * i:len(people) * i + len(people)])))</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
       </expression>
       <expression>
-        <expression-string>i</expression-string>
-        <language-id>HTML</language-id>
-        <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
-      </expression>
-      <expression>
-        <expression-string>db.session.query(sub_debt.c.costs / sub_debt.c.sums * func.coalesce(OrmDebt.sum, 0), OrmParticipant.c.person_di, OrmItem.category). \
-            join(OrmEvent, OrmEvent.id == OrmParticipant.c.event_id). \
-            join(OrmCheck, OrmCheck.event_id == OrmEvent.id). \
-            join(OrmItem, OrmItem.check_id == OrmCheck.id). \
-            outerjoin(OrmDebt, and_(OrmDebt.item_di == OrmItem.id, OrmDebt.person_id == OrmParticipant.c.person_di)). \
-            filter(OrmParticipant.c.event_id == events_id). \
-            group_by(OrmParticipant.c.person_di, OrmItem.category). \
-            order_by(OrmParticipant.c.person_di, OrmItem.category)</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
       </expression>
       <expression>
-        <expression-string>db.session.query(OrmPay). \
-        filter(OrmItem.check_id == check_id)</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
       </expression>
       <expression>
-        <expression-string>debt</expression-string>
-        <language-id>HTML</language-id>
-        <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
-      </expression>
-      <expression>
-        <expression-string>db.session.query(sub_debt.c.costs/sub_debt.c.sums*func.coalesce(func.sum(OrmDebt.sum), 0), sub_debt.c.id, OrmParticipant.c.person_di). \
-                join(OrmEvent, OrmEvent.id == OrmParticipant.c.event_id). \
-                join(OrmCheck, OrmCheck.event_id == OrmEvent.id). \
-                join(OrmItem, OrmItem.check_id == OrmCheck.id). \
-                outerjoin(OrmDebt, and_(OrmDebt.item_di == OrmItem.id, OrmDebt.person_id == OrmParticipant.c.person_di)). \
-                filter(and_(OrmItem.check_id == check_id, sub_debt.c.costs == OrmItem.cost)). \
-                order_by(OrmDebt.item_di, OrmParticipant.c.person_di)</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
       </expression>
@@ -924,8 +793,6 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/templates/event_table.html">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="391">
-          <caret line="23" selection-start-line="23" selection-end-line="23" />
         </state>
       </provider>
     </entry>
@@ -947,69 +814,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="272">
           <caret line="16" selection-start-line="16" selection-end-line="46" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/templates/check_form.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-2780">
-          <caret line="10" column="28" selection-start-line="10" selection-start-column="20" selection-end-line="10" selection-end-column="28" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/templates/event_form.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="161">
-          <caret line="91" column="44" lean-forward="true" selection-start-line="91" selection-start-column="44" selection-end-line="91" selection-end-column="44" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/venv/Lib/site-packages/flask_login/utils.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="337">
-          <caret line="271" selection-start-line="271" selection-end-line="271" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/venv/Lib/site-packages/flask/templating.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="152">
-          <caret line="139" selection-start-line="139" selection-end-line="139" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/templates/index.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="269">
-          <caret line="55" selection-start-line="55" selection-end-line="55" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/templates/item_table.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="144">
-          <caret line="33" selection-start-line="33" selection-end-line="33" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/templates/check_table.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="168">
-          <caret line="27" column="65" selection-start-line="27" selection-start-column="65" selection-end-line="27" selection-end-column="65" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/venv/Lib/site-packages/itsdangerous/serializer.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="152">
-          <caret line="149" selection-start-line="149" selection-end-line="149" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/app.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-325">
-          <caret line="482" selection-start-line="482" selection-end-line="482" />
         </state>
       </provider>
     </entry>
